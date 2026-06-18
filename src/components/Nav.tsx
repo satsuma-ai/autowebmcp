@@ -7,9 +7,10 @@ export function Nav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-2.5">
           <SatsumaLogo className="h-6 w-auto" />
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">
-            Auto WebMCP
-          </span>
+          <div className="hidden sm:flex flex-col leading-none">
+            <span className="text-base font-bold tracking-tight text-foreground">Auto WebMCP</span>
+            <span className="text-[11px] text-muted-foreground">by Satsuma.ai</span>
+          </div>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Home</Link>
