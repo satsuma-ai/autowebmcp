@@ -33,6 +33,7 @@ function ScanPage() {
   const navigate = useNavigate();
   const { domain } = useMemo(() => parseDomain(url), [url]);
   const category = useMemo(() => classify(domain), [domain]);
+  const cdn = useMemo(() => detectCdn(domain), [domain]);
 
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
