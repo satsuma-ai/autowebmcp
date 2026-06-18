@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
+import logo from "@/assets/satsuma-logo.png.asset.json";
 
 export function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/60 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2">
-          <Logo />
-          <span className="text-sm font-semibold tracking-tight">Satsuma <span className="text-muted-foreground font-normal">Auto WebMCP</span></span>
+        <Link to="/" className="flex items-center gap-2.5">
+          <SatsumaLogo className="h-6 w-auto" />
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">
+            Auto WebMCP
+          </span>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Home</Link>
@@ -24,18 +27,19 @@ export function Nav() {
   );
 }
 
-export function Logo({ size = 22 }: { size?: number }) {
+export function SatsumaLogo({ className = "h-6 w-auto" }: { className?: string }) {
+  // Use the mark + wordmark; rely on filter to keep wordmark legible on dark bg
   return (
-    <span
-      className="inline-flex items-center justify-center rounded-md"
-      style={{
-        width: size,
-        height: size,
-        background: "var(--gradient-glow)",
-        boxShadow: "0 4px 14px -2px oklch(0.78 0.165 55 / 0.5)",
-      }}
-    >
-      <span className="block h-1.5 w-1.5 rounded-full bg-background/90" />
-    </span>
+    <img
+      src={logo.url}
+      alt="Satsuma.ai"
+      className={className}
+      style={{ filter: "brightness(1.15)" }}
+    />
   );
+}
+
+// Legacy export kept for any prior imports
+export function Logo({ size = 22 }: { size?: number }) {
+  return <SatsumaLogo className="h-auto" />;
 }

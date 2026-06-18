@@ -7,7 +7,7 @@ import { CodeBlock } from "@/components/CodeBlock";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Satsuma Auto WebMCP — Turn any website into an agent-ready website" },
+      { title: "Auto WebMCP by Satsuma.ai — Turn any website into an agent-ready website" },
       { name: "description", content: "Paste a URL. Auto WebMCP scans your site, generates structured tools, and activates them at the edge so AI agents can safely use your website." },
     ],
   }),
@@ -151,7 +151,7 @@ function Landing() {
 
       <footer className="border-t border-border/60 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© Satsuma Auto WebMCP. Agent-ready websites at the edge.</p>
+          <p>© Satsuma.ai · Auto WebMCP. Agent-ready websites at the edge.</p>
           <p>Demo mode simulates activation unless provider credentials are connected.</p>
         </div>
       </footer>

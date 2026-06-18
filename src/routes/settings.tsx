@@ -3,7 +3,7 @@ import { Cloud, Globe, KeyRound, Server, Shield, ShieldCheck, Sparkles } from "l
 import { Nav } from "@/components/Nav";
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Settings · Satsuma Auto WebMCP" }] }),
+  head: () => ({ meta: [{ title: "Settings · Auto WebMCP by Satsuma.ai" }] }),
   component: SettingsPage,
 });
 
