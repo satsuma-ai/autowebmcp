@@ -198,12 +198,12 @@ export function detectCdn(domain: string): import("./store").DetectedCdn {
   const overrideId = CDN_OVERRIDES[key];
   const pick =
     CDN_PROVIDERS.find((p) => p.id === overrideId) ??
-    CDN_PROVIDERS[hashStr(key) % CDN_PROVIDERS.length];
+    CDN_PROVIDERS.find((p) => p.id === "cloudflare")!;
   return {
     providerId: pick.id,
     providerName: pick.name,
     evidence: evidenceFor(pick.id, key),
-    confidence: 0.91 + (hashStr(key) % 8) / 100,
+    confidence: 0.94 + (hashStr(key) % 5) / 100,
   };
 }
 
