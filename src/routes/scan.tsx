@@ -34,12 +34,18 @@ function ScanPage() {
   const { domain } = useMemo(() => parseDomain(url), [url]);
   const category = useMemo(() => classify(domain), [domain]);
 
+  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (startedRef.current) return;
     startedRef.current = true;
 
@@ -63,7 +69,7 @@ function ScanPage() {
       }, cumulative + 700),
     );
     return () => timers.forEach(clearTimeout);
-  }, [url, navigate]);
+  }, [url, navigate, mounted]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
