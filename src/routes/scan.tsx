@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { Activity, Brain, Code2, FileSearch, Layers, MousePointer2, Network, ScanLine, Sparkles } from "lucide-react";
 import { Nav } from "@/components/Nav";
-import { generateProject, parseDomain, classify, categoryLabel } from "@/lib/tool-generator";
+import { generateProject, parseDomain, classify, categoryLabel, detectCdn } from "@/lib/tool-generator";
 import { projectStore } from "@/lib/store";
 
 const search = z.object({ url: z.string() });
