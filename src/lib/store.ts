@@ -38,6 +38,13 @@ export interface ScanResult {
   warnings: string[];
 }
 
+export interface DetectedCdn {
+  providerId: string;
+  providerName: string;
+  evidence: string[];
+  confidence: number;
+}
+
 export interface ProjectState {
   url: string;
   domain: string;
@@ -47,6 +54,7 @@ export interface ProjectState {
   primaryGoal: string;
   scan: ScanResult;
   tools: WebMCPTool[];
+  detectedCdn: DetectedCdn;
   selectedProvider?: string;
   activationStatus: "idle" | "activating" | "active";
   previewUrl?: string;
