@@ -101,15 +101,28 @@ export function ProviderCard({
   status,
   onActivate,
   busy,
+  recommended,
+  evidence,
 }: {
   provider: Provider;
   status: "idle" | "active";
   onActivate: () => void;
   busy?: boolean;
+  recommended?: boolean;
+  evidence?: string[];
 }) {
   const Icon = provider.icon;
   return (
-    <div className="glass relative flex flex-col rounded-2xl p-5 transition-all hover:border-white/15">
+    <div
+      className={`glass relative flex flex-col rounded-2xl p-5 transition-all hover:border-white/15 ${
+        recommended ? "ring-1 ring-primary/50 border-primary/40" : ""
+      }`}
+    >
+      {recommended && (
+        <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow">
+          Recommended · auto-detected
+        </span>
+      )}
       <div className="flex items-start justify-between">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-lg"
@@ -130,10 +143,21 @@ export function ProviderCard({
       <h3 className="mt-4 text-base font-semibold">{provider.name}</h3>
       <p className="mt-1 text-[13px] font-medium text-foreground/80">{provider.tagline}</p>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{provider.description}</p>
+      {recommended && evidence && evidence.length > 0 && (
+        <ul className="mt-3 space-y-0.5 rounded-md border border-primary/20 bg-primary/5 p-2.5 text-[11px] font-mono text-muted-foreground/90">
+          {evidence.map((e) => (
+            <li key={e}>· {e}</li>
+          ))}
+        </ul>
+      )}
       <button
         onClick={onActivate}
         disabled={busy}
-        className="mt-5 inline-flex h-9 items-center justify-center rounded-md bg-foreground/95 px-3.5 text-sm font-medium text-background transition-colors hover:bg-foreground disabled:opacity-50"
+        className={`mt-5 inline-flex h-9 items-center justify-center rounded-md px-3.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+          recommended
+            ? "bg-primary text-primary-foreground hover:opacity-90"
+            : "bg-foreground/95 text-background hover:bg-foreground"
+        }`}
       >
         {status === "active" ? "Reconfigure" : busy ? "Activating…" : provider.cta}
       </button>

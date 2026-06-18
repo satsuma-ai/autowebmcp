@@ -125,6 +125,88 @@ function toolsFor(category: SiteCategory, name: string): WebMCPTool[] {
   }
 }
 
+const CDN_PROVIDERS: { id: string; name: string }[] = [
+  { id: "cloudflare", name: "Cloudflare Workers" },
+  { id: "akamai", name: "Akamai EdgeWorkers" },
+  { id: "fastly", name: "Fastly Compute / VCL" },
+  { id: "human", name: "HUMAN Enforcer" },
+  { id: "datadome", name: "DataDome Edge Module" },
+];
+
+const CDN_OVERRIDES: Record<string, string> = {
+  "doordash.com": "cloudflare",
+  "ubereats.com": "fastly",
+  "opentable.com": "akamai",
+  "calendly.com": "cloudflare",
+  "zillow.com": "fastly",
+  "shopify.com": "cloudflare",
+  "stripe.com": "cloudflare",
+  "linear.app": "cloudflare",
+  "notion.so": "cloudflare",
+  "figma.com": "fastly",
+  "vercel.com": "cloudflare",
+  "nytimes.com": "fastly",
+  "airbnb.com": "akamai",
+  "amazon.com": "akamai",
+};
+
+function evidenceFor(providerId: string, domain: string): string[] {
+  switch (providerId) {
+    case "cloudflare":
+      return [
+        `server: cloudflare on ${domain}`,
+        `cf-ray response header observed`,
+        `cf-cache-status: HIT on static assets`,
+      ];
+    case "akamai":
+      return [
+        `x-akamai-transformed header observed on ${domain}`,
+        `akamai-grn request id present`,
+        `edge hostname pattern *.edgekey.net`,
+      ];
+    case "fastly":
+      return [
+        `server: fastly response header on ${domain}`,
+        `x-served-by: cache-* edge POPs`,
+        `x-cache: HIT, HIT chain detected`,
+      ];
+    case "human":
+      return [
+        `_px3 / _pxhd cookies present on ${domain}`,
+        `HUMAN sensor script loaded`,
+        `Enforcer challenge response observed`,
+      ];
+    case "datadome":
+      return [
+        `datadome cookie present on ${domain}`,
+        `js.datadome.co tag loaded`,
+        `x-datadome response header observed`,
+      ];
+    default:
+      return [`CDN fingerprint matched for ${domain}`];
+  }
+}
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+export function detectCdn(domain: string): import("./store").DetectedCdn {
+  const key = domain.toLowerCase();
+  const overrideId = CDN_OVERRIDES[key];
+  const pick =
+    CDN_PROVIDERS.find((p) => p.id === overrideId) ??
+    CDN_PROVIDERS[hashStr(key) % CDN_PROVIDERS.length];
+  return {
+    providerId: pick.id,
+    providerName: pick.name,
+    evidence: evidenceFor(pick.id, key),
+    confidence: 0.91 + (hashStr(key) % 8) / 100,
+  };
+}
+
 export function generateProject(rawUrl: string): ProjectState {
   const url = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
   const { domain, slug, name } = parseDomain(url);
@@ -133,6 +215,7 @@ export function generateProject(rawUrl: string): ProjectState {
   const tools = toolsFor(category, name);
   const formsFound = 2 + Math.floor(Math.random() * 4);
   const ctasFound = 5 + Math.floor(Math.random() * 9);
+  const detectedCdn = detectCdn(domain);
   return {
     url,
     domain,
@@ -148,6 +231,7 @@ export function generateProject(rawUrl: string): ProjectState {
       warnings: category === "generic" ? ["Limited structured data detected — using safe defaults"] : [],
     },
     tools,
+    detectedCdn,
     activationStatus: "idle",
     previewUrl: `https://agent-preview.autowebmcp.demo/${slug}`,
     createdAt: Date.now(),

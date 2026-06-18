@@ -56,22 +56,30 @@ function ActivatePage() {
           Activate Auto WebMCP <span className="gradient-text">at the edge</span>
         </h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          Choose how Auto WebMCP should be attached to your existing traffic path. No origin rewrite required.
+          We auto-detected <span className="font-medium text-foreground">{project.detectedCdn.providerName}</span> in {project.domain}'s traffic path — that's the fastest path to activate. No origin rewrite required.
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
           Activating for <span className="font-mono text-foreground/80">{project.domain}</span>
         </p>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {PROVIDERS.map((p) => (
-            <ProviderCard
-              key={p.id}
-              provider={p}
-              status={project.selectedProvider === p.id && project.activationStatus === "active" ? "active" : "idle"}
-              onActivate={() => setActive(p)}
-              busy={!!active && active.id === p.id && !done}
-            />
-          ))}
+          {[...PROVIDERS]
+            .sort((a, b) => {
+              const aRec = a.id === project.detectedCdn.providerId ? -1 : 0;
+              const bRec = b.id === project.detectedCdn.providerId ? -1 : 0;
+              return aRec - bRec;
+            })
+            .map((p) => (
+              <ProviderCard
+                key={p.id}
+                provider={p}
+                status={project.selectedProvider === p.id && project.activationStatus === "active" ? "active" : "idle"}
+                onActivate={() => setActive(p)}
+                busy={!!active && active.id === p.id && !done}
+                recommended={p.id === project.detectedCdn.providerId}
+                evidence={p.id === project.detectedCdn.providerId ? project.detectedCdn.evidence : undefined}
+              />
+            ))}
         </div>
       </main>
 

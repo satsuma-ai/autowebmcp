@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { Activity, Brain, Code2, FileSearch, Layers, MousePointer2, Network, ScanLine, Sparkles } from "lucide-react";
 import { Nav } from "@/components/Nav";
-import { generateProject, parseDomain, classify, categoryLabel } from "@/lib/tool-generator";
+import { generateProject, parseDomain, classify, categoryLabel, detectCdn } from "@/lib/tool-generator";
 import { projectStore } from "@/lib/store";
 
 const search = z.object({ url: z.string() });
@@ -33,6 +33,7 @@ function ScanPage() {
   const navigate = useNavigate();
   const { domain } = useMemo(() => parseDomain(url), [url]);
   const category = useMemo(() => classify(domain), [domain]);
+  const cdn = useMemo(() => detectCdn(domain), [domain]);
 
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
@@ -162,15 +163,29 @@ function ScanPage() {
               <Row label="Primary goal" value={inferGoal(category)} />
               <Row label="Detected forms" value={step > 2 ? `${2 + Math.floor((step + domain.length) % 4)} forms` : "scanning…"} />
               <Row label="Detected CTAs" value={step > 3 ? `${5 + Math.floor((step + domain.length) % 8)} CTAs` : "scanning…"} />
+              <Row
+                label="Detected edge / CDN"
+                value={step > 0 ? `${cdn.providerName} · ${Math.round(cdn.confidence * 100)}%` : "fingerprinting…"}
+              />
               <Row label="Agent opportunities" value={step > 4 ? "High" : "analyzing…"} />
               <Row label="Risk level" value={step > 5 ? "Low — safe defaults" : "—"} />
             </dl>
-            <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-[12.5px] text-foreground/80">
-              <div className="font-medium text-primary">LLM inference engaged</div>
-              <p className="mt-1 leading-relaxed text-muted-foreground">
-                Generating WebMCP tools from visible journeys, forms, and structured data. No origin rewrite required.
-              </p>
-            </div>
+            {step > 0 && (
+              <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-[12.5px] text-foreground/80">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-primary">Recommended activation</div>
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-primary">auto-detected</span>
+                </div>
+                <p className="mt-1 leading-relaxed text-muted-foreground">
+                  Activate Auto WebMCP through <span className="text-foreground font-medium">{cdn.providerName}</span> — already in {domain}'s traffic path.
+                </p>
+                <ul className="mt-2 space-y-0.5 text-[11.5px] text-muted-foreground/90 font-mono">
+                  {cdn.evidence.map((e) => (
+                    <li key={e}>· {e}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </main>
