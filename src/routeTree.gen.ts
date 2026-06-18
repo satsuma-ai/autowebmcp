@@ -9,8 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuccessRouteImport } from './routes/success'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ScanRouteImport } from './routes/scan'
+import { Route as GeneratedRouteImport } from './routes/generated'
+import { Route as AgentPreviewRouteImport } from './routes/agent-preview'
+import { Route as ActivateRouteImport } from './routes/activate'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SuccessRoute = SuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScanRoute = ScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GeneratedRoute = GeneratedRouteImport.update({
+  id: '/generated',
+  path: '/generated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentPreviewRoute = AgentPreviewRouteImport.update({
+  id: '/agent-preview',
+  path: '/agent-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivateRoute = ActivateRouteImport.update({
+  id: '/activate',
+  path: '/activate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +55,116 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activate': typeof ActivateRoute
+  '/agent-preview': typeof AgentPreviewRoute
+  '/generated': typeof GeneratedRoute
+  '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
+  '/success': typeof SuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activate': typeof ActivateRoute
+  '/agent-preview': typeof AgentPreviewRoute
+  '/generated': typeof GeneratedRoute
+  '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
+  '/success': typeof SuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activate': typeof ActivateRoute
+  '/agent-preview': typeof AgentPreviewRoute
+  '/generated': typeof GeneratedRoute
+  '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
+  '/success': typeof SuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/activate'
+    | '/agent-preview'
+    | '/generated'
+    | '/scan'
+    | '/settings'
+    | '/success'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/activate'
+    | '/agent-preview'
+    | '/generated'
+    | '/scan'
+    | '/settings'
+    | '/success'
+  id:
+    | '__root__'
+    | '/'
+    | '/activate'
+    | '/agent-preview'
+    | '/generated'
+    | '/scan'
+    | '/settings'
+    | '/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivateRoute: typeof ActivateRoute
+  AgentPreviewRoute: typeof AgentPreviewRoute
+  GeneratedRoute: typeof GeneratedRoute
+  ScanRoute: typeof ScanRoute
+  SettingsRoute: typeof SettingsRoute
+  SuccessRoute: typeof SuccessRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/success': {
+      id: '/success'
+      path: '/success'
+      fullPath: '/success'
+      preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scan': {
+      id: '/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/generated': {
+      id: '/generated'
+      path: '/generated'
+      fullPath: '/generated'
+      preLoaderRoute: typeof GeneratedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agent-preview': {
+      id: '/agent-preview'
+      path: '/agent-preview'
+      fullPath: '/agent-preview'
+      preLoaderRoute: typeof AgentPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activate': {
+      id: '/activate'
+      path: '/activate'
+      fullPath: '/activate'
+      preLoaderRoute: typeof ActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +177,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivateRoute: ActivateRoute,
+  AgentPreviewRoute: AgentPreviewRoute,
+  GeneratedRoute: GeneratedRoute,
+  ScanRoute: ScanRoute,
+  SettingsRoute: SettingsRoute,
+  SuccessRoute: SuccessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
