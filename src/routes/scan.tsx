@@ -69,7 +69,7 @@ function ScanPage() {
       }, cumulative + 700),
     );
     return () => timers.forEach(clearTimeout);
-  }, [url, navigate]);
+  }, [url, navigate, mounted]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
