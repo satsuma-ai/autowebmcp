@@ -218,12 +218,6 @@ await navigator.modelContextTesting.executeTool(
         </div>
 
         <div className="mt-12 flex flex-wrap justify-center gap-3">
-          <Link
-            to="/agent-preview"
-            className="glow inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:scale-[1.02] transition-transform"
-          >
-            <Sparkles className="h-4 w-4" /> Open agent preview
-          </Link>
           <button
             onClick={() => {
               download(
