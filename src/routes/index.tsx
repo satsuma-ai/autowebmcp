@@ -215,26 +215,31 @@ function BrowserMock() {
 }
 
 function CodeMock() {
-  const code = `await navigator.modelContext.registerTool({
-  name: "book_appointment",
-  description: "Book an appointment from available times",
+  const code = `document.modelContext.registerTool({
+  name: "place_delivery_order",
+  description: "Place the current cart as a delivery order",
   inputSchema: {
     type: "object",
     properties: {
-      date: { type: "string", format: "date" },
-      time: { type: "string" },
-      name: { type: "string" }
+      cart_id: { type: "string" },
+      address: { type: "string" },
+      tip: { type: "number" }
     },
-    required: ["date", "time", "name"]
+    required: ["cart_id", "address"]
   },
-  annotations: {
-    readOnlyHint: false,
-    destructiveHint: false
+  annotations: { readOnlyHint: false },
+  execute: async (input) => {
+    const res = await fetch("/api/v1/orders", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input),
+      credentials: "same-origin"
+    });
+    return {
+      content: [{ type: "text",
+        text: JSON.stringify(await res.json()) }]
+    };
   }
-}, async (input) => {
-  return await window
-    .__autoWebMCP
-    .invoke("book_appointment", input);
 });`;
   return (
     <div className="lg:col-span-2">
