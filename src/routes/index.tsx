@@ -65,7 +65,9 @@ function Landing() {
               Turn any website into an <span className="gradient-text">agent-ready</span> website.
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Paste a URL. Auto WebMCP scans your site, generates real document.modelContext tools, and hands you the exact steps to ship them — through your CDN dashboard or your AI website builder.
+              Paste a URL. Auto WebMCP scans your site, generates real document.modelContext tools, then hands the whole
+              thing to your coding agent (Codex, Claude Code, Lovable, v0, Cursor) or gives you exact steps for your CDN
+              dashboard.
             </p>
 
             <form onSubmit={submit} className="mx-auto mt-10 flex max-w-2xl flex-col gap-3 sm:flex-row">
@@ -90,17 +92,20 @@ function Landing() {
               </button>
             </form>
             {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-            <div className="mt-4 flex items-center justify-center gap-4 text-sm text-muted-foreground">
-              <button
-                type="button"
-                onClick={() => { setUrl("https://opentable.com"); }}
-                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-              >
-                <PlayCircle className="h-4 w-4" /> Watch demo
-              </button>
-              <span>·</span>
-              <span>Try: <button onClick={() => setUrl("https://doordash.com")} className="text-foreground/80 hover:text-foreground underline-offset-4 hover:underline">doordash.com</button>, <button onClick={() => setUrl("https://calendly.com")} className="text-foreground/80 hover:text-foreground underline-offset-4 hover:underline">calendly.com</button>, <button onClick={() => setUrl("https://zillow.com")} className="text-foreground/80 hover:text-foreground underline-offset-4 hover:underline">zillow.com</button></span>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
+              <span>Try:</span>
+              {["doordash.com", "calendly.com", "zillow.com"].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setUrl(`https://${d}`)}
+                  className="text-foreground/80 hover:text-foreground underline-offset-4 hover:underline"
+                >
+                  {d}
+                </button>
+              ))}
             </div>
+
           </div>
 
           {/* HERO VISUAL */}
