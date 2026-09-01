@@ -14,6 +14,7 @@ import { Route as ScanRouteImport } from './routes/scan'
 import { Route as GeneratedRouteImport } from './routes/generated'
 import { Route as ActivateRouteImport } from './routes/activate'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiStatusRouteImport } from './routes/api/status'
 import { Route as ApiGenerateRouteImport } from './routes/api/generate'
 
 const SuccessRoute = SuccessRouteImport.update({
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStatusRoute = ApiStatusRouteImport.update({
+  id: '/api/status',
+  path: '/api/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGenerateRoute = ApiGenerateRouteImport.update({
   id: '/api/generate',
   path: '/api/generate',
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof ScanRoute
   '/success': typeof SuccessRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/status': typeof ApiStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/scan': typeof ScanRoute
   '/success': typeof SuccessRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/status': typeof ApiStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/scan': typeof ScanRoute
   '/success': typeof SuccessRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/status': typeof ApiStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +90,16 @@ export interface FileRouteTypes {
     | '/scan'
     | '/success'
     | '/api/generate'
+    | '/api/status'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/activate' | '/generated' | '/scan' | '/success' | '/api/generate'
+  to:
+    | '/'
+    | '/activate'
+    | '/generated'
+    | '/scan'
+    | '/success'
+    | '/api/generate'
+    | '/api/status'
   id:
     | '__root__'
     | '/'
@@ -91,6 +108,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/success'
     | '/api/generate'
+    | '/api/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,6 +118,7 @@ export interface RootRouteChildren {
   ScanRoute: typeof ScanRoute
   SuccessRoute: typeof SuccessRoute
   ApiGenerateRoute: typeof ApiGenerateRoute
+  ApiStatusRoute: typeof ApiStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -139,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/status': {
+      id: '/api/status'
+      path: '/api/status'
+      fullPath: '/api/status'
+      preLoaderRoute: typeof ApiStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/generate': {
       id: '/api/generate'
       path: '/api/generate'
@@ -156,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScanRoute: ScanRoute,
   SuccessRoute: SuccessRoute,
   ApiGenerateRoute: ApiGenerateRoute,
+  ApiStatusRoute: ApiStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
