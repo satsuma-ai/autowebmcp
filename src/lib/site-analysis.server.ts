@@ -290,6 +290,7 @@ export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
     headings: [],
     bodyText: "",
     headers: {},
+    existingWebmcp: NO_WEBMCP,
     reachable: false,
   };
 
