@@ -50,30 +50,41 @@ function destructure(tool: WebMCPTool): string {
   return names.length ? `{ ${names.join(", ")} }` : "_args";
 }
 
+/** Path params written as {param} become real interpolations. */
+function pathParams(tool: WebMCPTool): string[] {
+  return Array.from(tool.path.matchAll(/\{(\w+)\}/g)).map((m) => m[1]);
+}
+
+function pathExpr(tool: WebMCPTool): string {
+  return tool.path.replace(/\{(\w+)\}/g, (_m, k) => "${encodeURIComponent(String(" + k + "))}");
+}
+
 /** The `execute` body — a real fetch against the site's own endpoint. */
 function executeBody(tool: WebMCPTool): string {
-  const names = argNames(tool);
+  const inPath = pathParams(tool);
+  const names = argNames(tool).filter((n) => !inPath.includes(n));
   if (tool.method === "GET") {
     return `const params = new URLSearchParams(${
       names.length
-        ? `Object.entries({ ${names.join(", ")} }).flatMap(([k, v]) => (v == null ? [] : [[k, String(v)]]))`
+        ? `Object.entries({ ${names.join(", ")} }).flatMap(([k, v]) => (v == null ? [] : [[k, Array.isArray(v) ? v.join(",") : String(v)]]))`
         : "[]"
     });
-    const res = await fetch(\`${tool.path}?\${params}\`, {
+    const query = params.toString();
+    const res = await fetch(`${pathExpr(tool)}${names.length ? "${query ? `?${query}` : \"\"}" : ""}`, {
       signal,
       headers: { accept: "application/json" },
     });
-    if (!res.ok) return \`Request failed with status \${res.status}.\`;
-    const data = await res.json();
-    return JSON.stringify(data);`;
+    if (!res.ok) return `Request failed with status ${"${res.status}"}.`;
+    const data = await res.json().catch(() => null);
+    return data == null ? "Request succeeded but returned no JSON body." : JSON.stringify(data);`;
   }
-  return `const res = await fetch("${tool.path}", {
+  return `const res = await fetch(`${"`"}${pathExpr(tool)}${"`"}`, {
       method: "POST",
       signal,
       headers: { "content-type": "application/json", accept: "application/json" },
       body: JSON.stringify(${names.length ? `{ ${names.join(", ")} }` : "{}"}),
     });
-    if (!res.ok) return \`Request failed with status \${res.status}.\`;
+    if (!res.ok) return `Request failed with status ${"${res.status}"}.`;
     const data = await res.json().catch(() => ({ ok: true }));
     return JSON.stringify(data);`;
 }

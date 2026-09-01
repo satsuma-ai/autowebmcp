@@ -4,7 +4,7 @@ import type { ProjectState, WebMCPTool } from "./store";
 import { detectCdn, generateProject, parseDomain, classify } from "./tool-generator";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODELS = ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "openai/gpt-5-mini"];
+const MODELS = ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-5-mini"];
 
 const toolSchema = z.object({
   name: z.string(),
