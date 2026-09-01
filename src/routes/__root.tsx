@@ -78,6 +78,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
     ],
+    // WebMCP tools for this site — registers document.modelContext tools on load.
+    // Spec: https://developer.chrome.com/docs/ai/webmcp/imperative-api
+    scripts: [{ type: "module", src: "/webmcp-tools.js" }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
