@@ -16,6 +16,35 @@ export interface Provider {
 
 export const PROVIDERS: Provider[] = [
   {
+    id: "vercel",
+    name: "Vercel / Next.js",
+    tagline: "Ship it with your app",
+    description:
+      "Drop webmcp-tools.js in /public and load it from the root layout with next/script. Tools register on document.modelContext at page load.",
+    cta: "Generate Vercel setup",
+    successLabel: "Vercel setup ready",
+    installLabel: "app/layout.tsx",
+    installSnippet: `import Script from "next/script";
+// in <body>, after {children}
+<Script src="/webmcp-tools.js" type="module" strategy="afterInteractive" />`,
+    accent: "oklch(0.85 0.02 250)",
+    icon: Rocket,
+  },
+  {
+    id: "netlify",
+    name: "Netlify Edge Function",
+    tagline: "Inject at the edge, no origin change",
+    description:
+      "An HTMLRewriter edge function appends the tools script to <head> on every HTML response from your Netlify site.",
+    cta: "Generate edge function",
+    successLabel: "Edge function ready",
+    installLabel: "netlify/edge-functions/inject-webmcp.ts",
+    installSnippet: `export const config: Config = { path: "/*" };`,
+    accent: "oklch(0.78 0.13 190)",
+    icon: Zap,
+  },
+
+  {
     id: "cloudflare",
     name: "Cloudflare Workers",
     tagline: "Activate with a Cloudflare Worker",
