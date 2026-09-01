@@ -58,7 +58,7 @@ const modelOut = z.object({
   summary: z.string(),
   primaryGoal: z.string(),
   warnings: z.array(z.string()).default([]),
-  tools: z.array(toolSchema).min(4),
+  tools: z.array(toolSchema).min(6),
 });
 
 const SYSTEM = `You are the tool-design engine behind Auto WebMCP. You read real evidence scraped from a live website and design the WebMCP tool set an expert would hand-write for that exact site.
@@ -67,7 +67,7 @@ Quality bar (this is the whole job):
 - Model the site's REAL core journey, not generic web-form filler. Only include "submit_contact_request" / "subscribe_newsletter" / "search_site" style tools if the evidence shows nothing deeper, and never as the headline tools.
 - Example of the bar: for a car manufacturer's configurator the right tools are start_build, get_configurator_entry, filter_configurator_catalog, list_options, search_options, preview_change, apply_change, get_build_summary, estimate_monthly_cost, check_delivery, find_similar_in_stock, save_build — stateful handles (vehicle_id), option dependency previews before applying, typed pricing, availability. For a food-delivery site: search_restaurants, get_store_menu, add_items_to_cart, quote_delivery, place_delivery_order, track_order.
 - Design a coherent stateful chain: an entry tool that returns an opaque handle/id, read tools that take that handle, a preview tool before any mutation, and an apply/commit tool. Reuse the same id parameter name across tools.
-- 8 to 14 tools. Deep and specific beats broad and shallow.
+- 10 to 14 tools. Deep and specific beats broad and shallow. Every set must include, where the domain allows: an entry/catalogue tool, a detail/read tool keyed by handle, an option/variant listing tool, a natural-language search tool over those options, a preview-before-mutate tool, a commit/apply tool, a summary tool, a pricing/cost or quote tool, an availability/delivery/stock tool, and a save-or-share tool.
 - Write each description in this two-part shape:
   "Declarative: <what a shopper/user gets, plus what UI it opens>. Imperative: Requires <params>; optional <params>."
 - Paths: prefer paths/endpoints actually present in the evidence (api candidates, form actions, link paths). If you must infer, use a plausible same-origin path under the site's real structure and keep it consistent across tools.
