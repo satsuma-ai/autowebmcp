@@ -173,6 +173,12 @@ export interface DeployTarget {
   kind: "host" | "edge";
   summary: string;
   docsUrl: string;
+  /** Where and how to do it by hand in the provider's own dashboard. */
+  dashboard: {
+    loginUrl: string;
+    loginLabel: string;
+    uiSteps: string[];
+  };
   steps: string[];
   fileName: string;
   language: string;
