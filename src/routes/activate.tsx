@@ -50,9 +50,13 @@ function ActivatePage() {
   const [targetId, setTargetId] = useState<DeployTargetId>("cloudflare");
   const [mode, setMode] = useState<"prompt" | "dashboard">("prompt");
 
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (!project) navigate({ to: "/" });
-  }, [project, navigate]);
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (ready && !projectStore.get()) navigate({ to: "/" });
+  }, [ready, navigate]);
 
   useEffect(() => {
     if (detectedId && DEPLOY_TARGETS.some((t) => t.id === detectedId)) {

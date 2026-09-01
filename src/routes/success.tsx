@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Copy, Download, ExternalLink} from "lucide-react";
 import { Nav } from "@/components/Nav";
-import { useProject } from "@/lib/store";
+import { useProject, projectStore } from "@/lib/store";
 import { CodeBlock } from "@/components/CodeBlock";
 import { parseDomain } from "@/lib/tool-generator";
 import { bridgeScript, manifest, DEPLOY_TARGETS, WEBMCP_DOCS, type DeployTargetId } from "@/lib/webmcp-codegen";
@@ -27,9 +27,13 @@ function SuccessPage() {
   const navigate = useNavigate();
   const [targetId, setTargetId] = useState<DeployTargetId>("cloudflare");
 
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (!project) navigate({ to: "/" });
-  }, [project, navigate]);
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (ready && !projectStore.get()) navigate({ to: "/" });
+  }, [ready, navigate]);
 
   useEffect(() => {
     const p = project?.selectedProvider;
