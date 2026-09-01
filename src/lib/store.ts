@@ -11,6 +11,8 @@ export type SiteCategory =
   | "marketplace"
   | "media"
   | "nonprofit"
+  | "automotive"
+  | "travel"
   | "generic";
 
 export interface WebMCPTool {

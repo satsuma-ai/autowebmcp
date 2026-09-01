@@ -22,7 +22,9 @@ const KEYWORDS: Record<SiteCategory, string[]> = {
   real_estate: ["realty", "homes", "estate", "zillow", "redfin", "compass", "realtor", "properties"],
   marketplace: ["marketplace", "airbnb", "vrbo", "fiverr", "upwork", "thumbtack", "angi"],
   media: ["news", "times", "post", "blog", "media", "magazine", "nytimes", "verge", "techcrunch"],
-  nonprofit: ["org", "foundation", "charity", "nonprofit", "ngo"],
+  nonprofit: ["foundation", "charity", "nonprofit", "ngo"],
+  automotive: ["mercedes", "benz", "bmw", "audi", "volkswagen", "porsche", "toyota", "honda", "ford", "hyundai", "kia", "volvo", "tesla", "nissan", "lexus", "jaguar", "renault", "peugeot", "motors", "automobile", "autohaus", "carmax", "cars", "auto"],
+  travel: ["airlines", "airline", "flights", "hotel", "hotels", "booking", "expedia", "marriott", "hilton", "lufthansa", "delta", "travel", "cruise", "resort"],
   generic: [],
 };
 
@@ -54,6 +56,8 @@ const CATEGORY_SUMMARY: Record<SiteCategory, { summary: string; primaryGoal: str
   real_estate: { summary: "Property marketplace with search, tours, and agent contact.", primaryGoal: "Match buyers to listings and agents" },
   marketplace: { summary: "Two-sided marketplace connecting providers and customers.", primaryGoal: "Match supply and demand at scale" },
   media: { summary: "Publication with articles, subscriptions, and topical browsing.", primaryGoal: "Grow readership and subscriptions" },
+  automotive: { summary: "Vehicle manufacturer site with a model catalogue, online configurator, financing calculators, stock search, and test-drive booking.", primaryGoal: "Take a shopper from model browsing to a saved, priced, orderable build" },
+  travel: { summary: "Travel booking site with availability search, fare/rate comparison, and reservation flows.", primaryGoal: "Turn a trip intent into a confirmed booking" },
   nonprofit: { summary: "Mission-driven org with donations, volunteering, and updates.", primaryGoal: "Drive donations and engagement" },
   generic: { summary: "Business website with contact, content, and lead capture.", primaryGoal: "Capture leads and inform visitors" },
 };
