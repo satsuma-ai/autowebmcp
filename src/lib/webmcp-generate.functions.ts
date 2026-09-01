@@ -157,11 +157,11 @@ function parseJson(raw: string): unknown {
   }
 }
 
-export const generateWebmcpProject = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ url: z.string().min(3) }).parse(d))
-  .handler(async ({ data }): Promise<ProjectState> => {
+/** Core generator, shared by the client server-fn and the /api/* routes. */
+export async function buildProject(rawUrl: string): Promise<ProjectState> {
+  {
     const { analyzeSite } = await import("./site-analysis.server");
-    const url = data.url.startsWith("http") ? data.url : `https://${data.url}`;
+    const url = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
     const { domain, name } = parseDomain(url);
 
     let evidence: Awaited<ReturnType<typeof analyzeSite>> | null = null;
@@ -254,4 +254,9 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
       ];
     }
     return fallback;
-  });
+  }
+}
+
+export const generateWebmcpProject = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ url: z.string().min(3) }).parse(d))
+  .handler(async ({ data }): Promise<ProjectState> => buildProject(data.url));
