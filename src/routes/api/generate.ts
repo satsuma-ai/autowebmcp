@@ -17,8 +17,15 @@ export const Route = createFileRoute("/api/generate")({
         } catch {
           return json({ error: "website_url is required" }, 400);
         }
+        const { assertScanAllowed, logScan, RateLimitError } = await import("@/lib/scan-log.server");
+        try {
+          await assertScanAllowed(request.headers);
+        } catch (e) {
+          if (e instanceof RateLimitError) return json({ error: e.message }, 429);
+        }
         try {
           const record = await createGeneration(parsed.website_url);
+          await logScan(record.project, "api");
           const p = record.project;
           return json({
             generation_id: record.id,
