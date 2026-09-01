@@ -3,6 +3,7 @@ import { ArrowRight, Boxes, Cloud, Code2, Globe, Rocket, Sparkles, Terminal, Zap
 import { useState } from "react";
 import { Nav } from "@/components/Nav";
 import { CodeBlock } from "@/components/CodeBlock";
+import { LiveScans } from "@/components/LiveScans";
 
 export const Route = createFileRoute("/")({
   head: () => ({
