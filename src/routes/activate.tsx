@@ -1,149 +1,276 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, X } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Copy, Download, ExternalLink, Radar, Sparkles, Terminal } from "lucide-react";
+import { toast } from "sonner";
 import { Nav } from "@/components/Nav";
 import { useProject, projectStore } from "@/lib/store";
-import { PROVIDERS, ProviderCard, type Provider } from "@/components/ProviderCard";
+import { CodeBlock } from "@/components/CodeBlock";
+import {
+  DEPLOY_TARGETS,
+  aiBuilderPrompt,
+  bridgeScript,
+  type DeployTargetId,
+} from "@/lib/webmcp-codegen";
 
 export const Route = createFileRoute("/activate")({
+  head: () => ({
+    meta: [
+      { title: "Install WebMCP on your site — Auto WebMCP by Satsuma.ai" },
+      {
+        name: "description",
+        content:
+          "Auto-detects your CDN or host, then gives exact dashboard steps or a copy-paste prompt for your AI website builder to ship WebMCP.",
+      },
+      { property: "og:title", content: "Install WebMCP on your site" },
+      {
+        property: "og:description",
+        content: "Exact CDN dashboard steps or an AI-builder prompt to ship your generated WebMCP tools.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: ActivatePage,
 });
 
-const STEPS = [
-  "Building WebMCP bundle",
-  "Generating provider config",
-  "Validating headers and CSP",
-  "Preparing edge injection",
-  "Running health check",
-  "Activation complete",
-];
+function download(name: string, content: string, type = "text/plain") {
+  const blob = new Blob([content], { type });
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = u;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(u);
+}
 
 function ActivatePage() {
   const project = useProject();
   const navigate = useNavigate();
-  const [active, setActive] = useState<Provider | null>(null);
-  const [stepIdx, setStepIdx] = useState(0);
-  const [done, setDone] = useState(false);
+  const detectedId = project?.detectedCdn.providerId;
+  const [targetId, setTargetId] = useState<DeployTargetId>("cloudflare");
+  const [mode, setMode] = useState<"dashboard" | "prompt">("dashboard");
 
   useEffect(() => {
     if (!project) navigate({ to: "/" });
   }, [project, navigate]);
 
   useEffect(() => {
-    if (!active) return;
-    setStepIdx(0);
-    setDone(false);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    STEPS.forEach((_, i) => {
-      timers.push(setTimeout(() => setStepIdx(i + 1), (i + 1) * 650));
-    });
-    timers.push(
-      setTimeout(() => {
-        setDone(true);
-        projectStore.patch({ selectedProvider: active.id, activationStatus: "active" });
-      }, STEPS.length * 650 + 200),
-    );
-    return () => timers.forEach(clearTimeout);
-  }, [active]);
+    if (detectedId && DEPLOY_TARGETS.some((t) => t.id === detectedId)) {
+      setTargetId(detectedId as DeployTargetId);
+    }
+  }, [detectedId]);
+
+  const target = useMemo(() => DEPLOY_TARGETS.find((t) => t.id === targetId)!, [targetId]);
 
   if (!project) return null;
+
+  const prompt = aiBuilderPrompt(project.domain, project.tools, target);
+  const script = bridgeScript(project.domain, project.tools);
+  const enabled = project.tools.filter((t) => t.enabled);
+
+  function choose(id: DeployTargetId) {
+    setTargetId(id);
+    projectStore.patch({ selectedProvider: id });
+  }
 
   return (
     <div className="min-h-screen">
       <Nav />
       <main className="mx-auto max-w-7xl px-6 py-14">
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-          Activate Auto WebMCP <span className="gradient-text">at the edge</span>
+          Ship WebMCP to <span className="gradient-text">{project.domain}</span>
         </h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          We auto-detected <span className="font-medium text-foreground">{project.detectedCdn.providerName}</span> in {project.domain}'s traffic path — that's the fastest path to activate. No origin rewrite required.
-        </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Activating for <span className="font-mono text-foreground/80">{project.domain}</span>
+          Nothing is deployed for you. Pick where your site is served from, then either follow the exact steps in that
+          provider's dashboard or hand the generated prompt to your AI website builder.
         </p>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {[...PROVIDERS]
-            .sort((a, b) => {
-              const aRec = a.id === project.detectedCdn.providerId ? -1 : 0;
-              const bRec = b.id === project.detectedCdn.providerId ? -1 : 0;
-              return aRec - bRec;
-            })
-            .map((p) => (
-              <ProviderCard
-                key={p.id}
-                provider={p}
-                status={project.selectedProvider === p.id && project.activationStatus === "active" ? "active" : "idle"}
-                onActivate={() => setActive(p)}
-                busy={!!active && active.id === p.id && !done}
-                recommended={p.id === project.detectedCdn.providerId}
-                evidence={p.id === project.detectedCdn.providerId ? project.detectedCdn.evidence : undefined}
-              />
-            ))}
-        </div>
-      </main>
-
-      {active && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-md p-4">
-          <div className="glass-strong relative w-full max-w-lg rounded-2xl p-6">
-            <button
-              onClick={() => {
-                if (done) {
-                  setActive(null);
-                  navigate({ to: "/success" });
-                } else setActive(null);
-              }}
-              className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-white/5 hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ background: `color-mix(in oklab, ${active.accent} 18%, transparent)`, color: active.accent }}
-              >
-                <active.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Activating</div>
-                <div className="text-base font-semibold">{active.name}</div>
-              </div>
+        {/* Detection */}
+        <div className="glass mt-8 rounded-2xl p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Radar className="h-4 w-4 text-primary" />
+              <span className="text-muted-foreground">Detected in {project.domain}'s traffic path:</span>
+              <span className="font-medium text-foreground">{project.detectedCdn.providerName}</span>
+              <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                {Math.round(project.detectedCdn.confidence * 100)}% match
+              </span>
             </div>
-            <ol className="mt-6 space-y-3">
-              {STEPS.map((s, i) => {
-                const status = i < stepIdx ? "done" : i === stepIdx ? "active" : "pending";
-                return (
-                  <li key={s} className="flex items-center gap-3 text-sm">
-                    <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full border ${
-                        status === "done"
-                          ? "border-success/40 bg-success/15 text-success"
-                          : status === "active"
-                            ? "border-primary/50 bg-primary/15 text-primary"
-                            : "border-border bg-muted/40 text-muted-foreground"
-                      }`}
-                    >
-                      {status === "done" ? <CheckCircle2 className="h-3.5 w-3.5" /> : status === "active" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
+            <span className="text-xs text-muted-foreground">
+              Detection is a starting point — pick any target below.
+            </span>
+          </div>
+          <ul className="mt-3 grid gap-1 text-[11.5px] font-mono text-muted-foreground/90 sm:grid-cols-3">
+            {project.detectedCdn.evidence.map((e) => (
+              <li key={e}>· {e}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Target picker */}
+        <div className="mt-8">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Where is {project.domain} served from?
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {DEPLOY_TARGETS.map((t) => {
+              const active = t.id === targetId;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => choose(t.id)}
+                  className={`glass relative rounded-xl p-4 text-left transition-colors ${
+                    active ? "border-primary/50 ring-1 ring-primary/40" : "hover:border-white/15"
+                  }`}
+                >
+                  {t.id === detectedId && (
+                    <span className="absolute -top-2.5 left-4 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
+                      Detected
                     </span>
-                    <span className={status === "pending" ? "text-muted-foreground" : "text-foreground"}>{s}</span>
-                  </li>
-                );
-              })}
-            </ol>
-            {done && (
-              <button
-                onClick={() => {
-                  setActive(null);
-                  navigate({ to: "/success" });
-                }}
-                className="mt-6 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground hover:opacity-90"
-              >
-                Continue
-              </button>
-            )}
+                  )}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">{t.name}</span>
+                    <span className="rounded-full border border-border/70 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {t.kind}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[12.5px] leading-relaxed text-muted-foreground">{t.summary}</p>
+                </button>
+              );
+            })}
           </div>
         </div>
-      )}
+
+        {/* Path picker */}
+        <div className="mt-10 flex flex-wrap gap-2">
+          {(
+            [
+              ["dashboard", `Do it in ${target.name}`],
+              ["prompt", "Give it to my AI website builder"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setMode(id)}
+              className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors ${
+                mode === id
+                  ? "border-primary bg-primary/12 text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
+              }`}
+            >
+              {id === "dashboard" ? <Terminal className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === "dashboard" ? (
+          <div className="mt-6 grid gap-6 lg:grid-cols-5">
+            <div className="glass rounded-2xl p-6 lg:col-span-2">
+              <h3 className="text-base font-semibold">Log in to {target.dashboard.loginLabel}</h3>
+              <a
+                href={target.dashboard.loginUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              >
+                Open {target.dashboard.loginLabel} <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+              <ol className="mt-5 space-y-2.5 text-sm">
+                {target.dashboard.uiSteps.map((s, i) => (
+                  <li key={s} className="flex gap-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">
+                      {i + 1}
+                    </span>
+                    <span className="text-foreground/85">{s.replaceAll("{domain}", project.domain)}</span>
+                  </li>
+                ))}
+              </ol>
+              <a
+                href={target.docsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-5 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+              >
+                Official {target.name} docs <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+            <div className="lg:col-span-3">
+              <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {target.fileName}
+              </h3>
+              <CodeBlock language={target.language} code={target.code(project.domain)} />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    download(target.fileName.split("/").pop()!, target.code(project.domain));
+                    toast.success(`${target.fileName} downloaded`);
+                  }}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3.5 text-sm font-medium hover:bg-accent"
+                >
+                  <Download className="h-4 w-4" /> {target.fileName.split("/").pop()}
+                </button>
+                <button
+                  onClick={() => {
+                    download("webmcp-tools.js", script, "text/javascript");
+                    toast.success("webmcp-tools.js downloaded");
+                  }}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3.5 text-sm font-medium hover:bg-accent"
+                >
+                  <Download className="h-4 w-4" /> webmcp-tools.js
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6">
+            <div className="glass rounded-2xl p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold">Paste this into Lovable, v0, Cursor, or Claude Code</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Written for {target.name}, with all {enabled.length} generated tools and the full{" "}
+                    <span className="font-mono">webmcp-tools.js</span> module inlined so the agent has everything it
+                    needs.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(prompt);
+                      toast.success("Prompt copied");
+                    }}
+                    className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    <Copy className="h-4 w-4" /> Copy prompt
+                  </button>
+                  <button
+                    onClick={() => {
+                      download(`webmcp-prompt-${target.id}.md`, prompt, "text/markdown");
+                      toast.success("Prompt downloaded");
+                    }}
+                    className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium hover:bg-accent"
+                  >
+                    <Download className="h-4 w-4" /> .md
+                  </button>
+                </div>
+              </div>
+              <div className="mt-4 max-h-[520px] overflow-auto rounded-xl">
+                <CodeBlock language="prompt.md" code={prompt} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-12">
+          <Link
+            to="/success"
+            className="glow inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+          >
+            Full module, manifest and verification <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </main>
     </div>
   );
 }

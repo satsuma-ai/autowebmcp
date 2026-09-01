@@ -19,13 +19,13 @@ export function Nav() {
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Home</Link>
-          <Link to="/activate" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Activation</Link>
+          <Link to="/activate" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Install</Link>
           <Link to="/agent-preview" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Agent preview</Link>
           <Link to="/settings" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Settings</Link>
         </nav>
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[11px] text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Demo mode
+            <span className="h-1.5 w-1.5 rounded-full bg-success" /> WebMCP live on this page
           </span>
         </div>
       </div>

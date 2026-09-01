@@ -56,7 +56,7 @@ function SuccessPage() {
             <CheckCircle2 className="h-3.5 w-3.5" /> WebMCP generated
           </div>
           <h1 className="mt-5 text-5xl font-semibold tracking-tight sm:text-6xl">
-            <span className="gradient-text">{project.domain}</span> is now agent-ready.
+            <span className="gradient-text">{project.domain}</span> is ready to go agent-ready.
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
             {enabled.length} tools registered on <span className="font-mono text-foreground">document.modelContext</span>. Pick where
