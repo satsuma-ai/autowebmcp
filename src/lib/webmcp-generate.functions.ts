@@ -162,7 +162,7 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
           url,
           domain,
           siteName: parsed.siteName || name,
-          category: (["food_delivery", "ecommerce", "restaurant", "saas", "healthcare", "real_estate", "marketplace", "media", "nonprofit"].includes(parsed.category)
+          category: (["food_delivery", "ecommerce", "restaurant", "saas", "healthcare", "real_estate", "marketplace", "media", "nonprofit", "automotive", "travel"].includes(parsed.category)
             ? parsed.category
             : "generic") as ProjectState["category"],
           summary: parsed.summary,

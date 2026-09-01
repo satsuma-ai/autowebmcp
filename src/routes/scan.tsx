@@ -213,6 +213,8 @@ function inferGoal(c: ReturnType<typeof classify>): string {
     marketplace: "Match supply and demand",
     media: "Grow subscriptions",
     nonprofit: "Drive donations",
+    automotive: "Configure, price and order a vehicle",
+    travel: "Turn trip intent into a booking",
     generic: "Capture leads",
   }[c];
 }
