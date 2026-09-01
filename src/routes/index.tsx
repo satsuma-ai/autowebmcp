@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Boxes, Cloud, Code2, Globe, PlayCircle, Server, Shield, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Boxes, Cloud, Code2, Globe, PlayCircle, Rocket, Sparkles, Zap } from "lucide-react";
 import { useState } from "react";
 import { Nav } from "@/components/Nav";
 import { CodeBlock } from "@/components/CodeBlock";
