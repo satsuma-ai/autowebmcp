@@ -10,6 +10,18 @@ export interface FormEvidence {
   nearbyText: string;
 }
 
+export interface ExistingWebmcp {
+  present: boolean;
+  /** "webmcp" = in-page document.modelContext tools, "mcp-server" = remote MCP endpoint only */
+  kind: "none" | "webmcp" | "mcp-server";
+  platform?: string;
+  signals: string[];
+  endpoints: string[];
+  toolNames: string[];
+  confidence: number;
+  note?: string;
+}
+
 export interface SiteEvidence {
   url: string;
   domain: string;
