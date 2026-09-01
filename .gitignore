@@ -30,3 +30,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Proprietary internals — kept out of the public repo (open source shell only)
+AGENTS.md
+.lovable/
+src/lib/site-analysis.server.ts
+src/lib/webmcp-generate.functions.ts
+src/lib/tool-generator.ts
