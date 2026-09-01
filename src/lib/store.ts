@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 
 export type ToolSafety = "safe" | "confirmation_required" | "sensitive";
 export type SiteCategory =
+  | "food_delivery"
   | "ecommerce"
   | "restaurant"
   | "saas"

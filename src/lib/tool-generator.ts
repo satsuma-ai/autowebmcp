@@ -140,27 +140,11 @@ function toolsFor(category: SiteCategory, name: string): WebMCPTool[] {
 const CDN_PROVIDERS: { id: string; name: string }[] = [
   { id: "cloudflare", name: "Cloudflare Workers" },
   { id: "akamai", name: "Akamai EdgeWorkers" },
-  { id: "fastly", name: "Fastly Compute / VCL" },
-  { id: "human", name: "HUMAN Enforcer" },
-  { id: "datadome", name: "DataDome Edge Module" },
+  { id: "netlify", name: "Netlify Edge Functions" },
+  { id: "vercel", name: "Vercel / Next.js" },
 ];
 
-const CDN_OVERRIDES: Record<string, string> = {
-  "doordash.com": "cloudflare",
-  "ubereats.com": "fastly",
-  "opentable.com": "akamai",
-  "calendly.com": "cloudflare",
-  "zillow.com": "fastly",
-  "shopify.com": "cloudflare",
-  "stripe.com": "cloudflare",
-  "linear.app": "cloudflare",
-  "notion.so": "cloudflare",
-  "figma.com": "fastly",
-  "vercel.com": "cloudflare",
-  "nytimes.com": "fastly",
-  "airbnb.com": "akamai",
-  "amazon.com": "akamai",
-};
+const CDN_OVERRIDES: Record<string, string> = {};
 
 function evidenceFor(providerId: string, domain: string): string[] {
   switch (providerId) {
@@ -176,23 +160,17 @@ function evidenceFor(providerId: string, domain: string): string[] {
         `akamai-grn request id present`,
         `edge hostname pattern *.edgekey.net`,
       ];
-    case "fastly":
+    case "netlify":
       return [
-        `server: fastly response header on ${domain}`,
-        `x-served-by: cache-* edge POPs`,
-        `x-cache: HIT, HIT chain detected`,
+        `server: Netlify response header on ${domain}`,
+        `x-nf-request-id present`,
+        `netlify edge function invocation observed`,
       ];
-    case "human":
+    case "vercel":
       return [
-        `_px3 / _pxhd cookies present on ${domain}`,
-        `HUMAN sensor script loaded`,
-        `Enforcer challenge response observed`,
-      ];
-    case "datadome":
-      return [
-        `datadome cookie present on ${domain}`,
-        `js.datadome.co tag loaded`,
-        `x-datadome response header observed`,
+        `server: Vercel response header on ${domain}`,
+        `x-vercel-id: iad1 edge region observed`,
+        `x-vercel-cache: HIT on static assets`,
       ];
     default:
       return [`CDN fingerprint matched for ${domain}`];
@@ -221,7 +199,7 @@ export function detectCdn(domain: string): import("./store").DetectedCdn {
 
 export function generateProject(rawUrl: string): ProjectState {
   const url = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
-  const { domain, slug, name } = parseDomain(url);
+  const { domain, name } = parseDomain(url);
   const category = classify(domain);
   const { summary, primaryGoal } = CATEGORY_SUMMARY[category];
   const tools = toolsFor(category, name);
@@ -240,12 +218,11 @@ export function generateProject(rawUrl: string): ProjectState {
       ctasFound,
       apiCandidates: tools.length,
       confidence: 0.88 + Math.random() * 0.08,
-      warnings: category === "generic" ? ["Limited structured data detected — using safe defaults"] : [],
+      warnings: category === "generic" ? ["Limited structured data detected, using safe defaults"] : [],
     },
     tools,
     detectedCdn,
     activationStatus: "idle",
-    previewUrl: `https://agent-preview.autowebmcp.demo/${slug}`,
     createdAt: Date.now(),
   };
 }
