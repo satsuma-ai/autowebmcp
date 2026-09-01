@@ -8,7 +8,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Auto WebMCP by Satsuma.ai — Turn any website into an agent-ready website" },
-      { name: "description", content: "Paste a URL. Auto WebMCP scans your site, generates structured tools, and activates them at the edge so AI agents can safely use your website." },
+      { name: "description", content: "Paste a URL. Auto WebMCP scans your site, generates real document.modelContext tools, and hands you the exact steps to ship them — through your CDN dashboard or your AI website builder." },
     ],
   }),
   component: Landing,
@@ -25,9 +25,8 @@ const SAMPLE_TOOLS = [
 const PROVIDERS = [
   { name: "Cloudflare Workers", icon: Cloud },
   { name: "Akamai EdgeWorkers", icon: Globe },
-  { name: "Fastly Compute / VCL", icon: Server },
-  { name: "HUMAN Enforcer", icon: ShieldCheck },
-  { name: "DataDome Edge Module", icon: Shield },
+  { name: "Netlify Edge Functions", icon: Zap },
+  { name: "Vercel / Next.js", icon: Rocket },
 ];
 
 function Landing() {
@@ -66,7 +65,7 @@ function Landing() {
               Turn any website into an <span className="gradient-text">agent-ready</span> website.
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Paste a URL. Auto WebMCP scans your site, generates structured tools, and activates them at the edge so AI agents can safely use your website.
+              Paste a URL. Auto WebMCP scans your site, generates real document.modelContext tools, and hands you the exact steps to ship them — through your CDN dashboard or your AI website builder.
             </p>
 
             <form onSubmit={submit} className="mx-auto mt-10 flex max-w-2xl flex-col gap-3 sm:flex-row">
@@ -120,7 +119,7 @@ function Landing() {
           <p className="text-center text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             Works with your existing edge stack
           </p>
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {PROVIDERS.map((p) => (
               <div key={p.name} className="glass flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm text-foreground/80">
                 <p.icon className="h-4 w-4 text-primary" /> {p.name}
@@ -136,7 +135,7 @@ function Landing() {
           {[
             { icon: Zap, title: "LLM-inferred actions", desc: "Auto WebMCP scans your homepage, forms, CTAs and journeys to infer agent-callable tools." },
             { icon: Boxes, title: "Structured tools", desc: "Every tool ships with a JSON Schema, safety class, confidence score, and example agent prompt." },
-            { icon: Code2, title: "Edge activation", desc: "No origin rewrite required. Deploy through your CDN, bot defense, or edge security provider." },
+            { icon: Code2, title: "Ship it your way", desc: "Auto-detects your CDN or host, then gives step-by-step dashboard instructions or a copy-paste prompt for your AI website builder." },
           ].map((f) => (
             <div key={f.title} className="glass rounded-2xl p-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">

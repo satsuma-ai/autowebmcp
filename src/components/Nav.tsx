@@ -19,7 +19,7 @@ export function Nav() {
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Home</Link>
-          <Link to="/activate" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Activation</Link>
+          <Link to="/activate" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Install</Link>
           <Link to="/agent-preview" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Agent preview</Link>
           <Link to="/settings" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition-colors">Settings</Link>
         </nav>
