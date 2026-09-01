@@ -303,10 +303,26 @@ export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
   if (!home.body) return { ...empty, note: `Homepage returned HTTP ${home.res.status}` };
 
   const headers: Record<string, string> = {};
-  for (const k of ["server", "cf-ray", "x-akamai-transformed", "x-vercel-id", "x-nf-request-id", "via", "x-powered-by", "content-language"]) {
+  for (const k of [
+    "server",
+    "cf-ray",
+    "x-akamai-transformed",
+    "x-vercel-id",
+    "x-nf-request-id",
+    "via",
+    "x-powered-by",
+    "content-language",
+    "x-shopid",
+    "x-shopify-stage",
+    "powered-by",
+  ]) {
     const v = home.res.headers.get(k);
     if (v) headers[k] = v;
   }
+
+  const { platform, signal: platformSignal } = detectPlatform(home.body, headers);
+  const existingWebmcp = await detectExistingWebmcp(url, home.body, platform);
+  if (platformSignal) existingWebmcp.signals = uniq([platformSignal, ...existingWebmcp.signals], 8);
 
   const pages: { url: string; html: string }[] = [{ url, html: home.body }];
 
