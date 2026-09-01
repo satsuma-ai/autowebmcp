@@ -38,9 +38,20 @@ export interface SiteEvidence {
   headings: string[];
   bodyText: string;
   headers: Record<string, string>;
+  platform?: string;
+  existingWebmcp: ExistingWebmcp;
   reachable: boolean;
   note?: string;
 }
+
+const NO_WEBMCP: ExistingWebmcp = {
+  present: false,
+  kind: "none",
+  signals: [],
+  endpoints: [],
+  toolNames: [],
+  confidence: 0,
+};
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
