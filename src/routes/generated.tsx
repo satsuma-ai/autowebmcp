@@ -5,6 +5,8 @@ import { Nav } from "@/components/Nav";
 import { useProject, projectStore, type WebMCPTool } from "@/lib/store";
 import { CodeBlock } from "@/components/CodeBlock";
 import { SafetyBadge, ConfidenceBadge } from "@/components/ToolBadges";
+import { bridgeScript, manifest, toolRegistrationCode, WEBMCP_DOCS } from "@/lib/webmcp-codegen";
+
 
 export const Route = createFileRoute("/generated")({
   component: GeneratedPage,
@@ -128,35 +130,33 @@ function GeneratedPage() {
                   <CodeBlock language="schema.json" code={JSON.stringify(tool.inputSchema, null, 2)} />
                 </div>
                 <div>
-                  <SectionTitle>Generated WebMCP code</SectionTitle>
-                  <CodeBlock language="webmcp.ts" code={registerToolCode(tool)} />
+                  <SectionTitle>document.modelContext.registerTool</SectionTitle>
+                  <CodeBlock language="webmcp.ts" code={toolRegistrationCode(tool)} />
                 </div>
               </div>
 
               <AgentPreview tool={tool} domain={project.domain} />
 
               <div>
+                <SectionTitle>webmcp-tools.js · full drop-in module</SectionTitle>
+                <CodeBlock language="webmcp-tools.js" code={bridgeScript(project.domain, project.tools)} />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Registers on <span className="font-mono">document.modelContext</span> per the{" "}
+                  <a href={WEBMCP_DOCS.chromeImperative} target="_blank" rel="noreferrer" className="text-primary underline">
+                    Chrome WebMCP imperative API
+                  </a>
+                  , with a fallback to the deprecated <span className="font-mono">navigator.modelContext</span> alias.
+                </p>
+              </div>
+
+              <div>
                 <SectionTitle>WebMCP manifest</SectionTitle>
                 <CodeBlock
                   language="manifest.json"
-                  code={JSON.stringify(
-                    {
-                      version: "1.0",
-                      site: project.domain,
-                      generatedAt: new Date(project.createdAt).toISOString(),
-                      tools: project.tools.map((t) => ({
-                        name: t.name,
-                        method: t.method,
-                        path: t.path,
-                        safety: t.safety,
-                        enabled: t.enabled,
-                      })),
-                    },
-                    null,
-                    2,
-                  )}
+                  code={JSON.stringify(manifest(project.domain, project.tools), null, 2)}
                 />
               </div>
+
             </section>
           )}
         </div>
@@ -203,20 +203,6 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-function registerToolCode(t: WebMCPTool): string {
-  const destructive = t.safety !== "safe";
-  return `await navigator.modelContext.registerTool({
-  name: "${t.name}",
-  description: "${t.description.replace(/"/g, '\\"')}",
-  inputSchema: ${JSON.stringify(t.inputSchema, null, 2).replace(/\n/g, "\n  ")},
-  annotations: {
-    readOnlyHint: ${t.method === "GET"},
-    destructiveHint: ${destructive}
-  }
-}, async (input) => {
-  return await window.__autoWebMCP.invoke("${t.name}", input);
-});`;
-}
 
 function AgentPreview({ tool, domain }: { tool: WebMCPTool; domain: string }) {
   return (
