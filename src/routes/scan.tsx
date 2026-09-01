@@ -32,14 +32,16 @@ function ScanPage() {
   const { url } = Route.useSearch();
   const navigate = useNavigate();
   const { domain } = useMemo(() => parseDomain(url), [url]);
-  const category = useMemo(() => classify(domain), [domain]);
   const cdn = useMemo(() => detectCdn(domain), [domain]);
+  const runGenerate = useServerFn(generateWebmcpProject);
 
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
+  const [result, setResult] = useState<ProjectState | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+  const doneRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -57,26 +59,57 @@ function ScanPage() {
       cumulative += baseDelays[i];
       timers.push(
         setTimeout(() => {
-          setStep(i + 1);
+          setStep((prev) => (i + 1 > prev ? i + 1 : prev));
           setLogs((prev) => [...prev, `${ts(Math.round(cumulative / 100))} ${s.label}`]);
         }, cumulative),
       );
     });
-    timers.push(
-      setTimeout(() => {
-        const project = generateProject(url);
+
+    const started = Date.now();
+    runGenerate({ data: { url } })
+      .then((project) => {
+        setResult(project);
+        setLogs((prev) => [
+          ...prev,
+          `[live] fetched ${project.domain} · ${project.scan.formsFound} forms · ${project.scan.ctasFound} CTAs · ${project.scan.apiCandidates} endpoint candidates`,
+          `[live] designed ${project.tools.length} WebMCP tools for "${project.primaryGoal}"`,
+          ...project.scan.warnings.map((w) => `[warn] ${w}`),
+        ]);
         projectStore.set(project);
-        navigate({ to: "/generated" });
-      }, cumulative + 700),
-    );
+        const elapsed = Date.now() - started;
+        const wait = Math.max(600, 5900 - elapsed);
+        timers.push(
+          setTimeout(() => {
+            if (doneRef.current) return;
+            doneRef.current = true;
+            setStep(STEPS.length);
+            navigate({ to: "/generated" });
+          }, wait),
+        );
+      })
+      .catch((e: unknown) => {
+        setLogs((prev) => [...prev, `[warn] live analysis unavailable (${String(e).slice(0, 90)}) — using structural heuristics`]);
+        const project = generateProject(url);
+        setResult(project);
+        projectStore.set(project);
+        timers.push(
+          setTimeout(() => {
+            if (doneRef.current) return;
+            doneRef.current = true;
+            navigate({ to: "/generated" });
+          }, 1200),
+        );
+      });
+
     return () => timers.forEach(clearTimeout);
-  }, [url, navigate, mounted]);
+  }, [url, navigate, mounted, runGenerate]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [logs]);
 
   const pct = Math.min(100, Math.round((step / STEPS.length) * 100));
+
 
   return (
     <div className="min-h-screen">
