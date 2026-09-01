@@ -32,8 +32,10 @@ function SuccessPage() {
   }, [project, navigate]);
 
   useEffect(() => {
-    if (project?.selectedProvider === "akamai") setTargetId("akamai");
+    const p = project?.selectedProvider;
+    if (p && DEPLOY_TARGETS.some((t) => t.id === p)) setTargetId(p as DeployTargetId);
   }, [project?.selectedProvider]);
+
 
   const target = useMemo(() => DEPLOY_TARGETS.find((t) => t.id === targetId)!, [targetId]);
 
