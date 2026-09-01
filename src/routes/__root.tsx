@@ -11,7 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { registerAppTools } from "../lib/webmcp-live";
+
 import { Toaster } from "@/components/ui/sonner";
 
 
@@ -101,11 +101,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
 
-  useEffect(() => {
-    return registerAppTools((path) => router.navigate({ href: path }));
-  }, [router]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
