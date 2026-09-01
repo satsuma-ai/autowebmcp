@@ -56,7 +56,7 @@ function executeBody(tool: WebMCPTool): string {
   if (tool.method === "GET") {
     return `const params = new URLSearchParams(${
       names.length
-        ? `Object.entries({ ${names.join(", ")} }).flatMap(([k, v]) => (v == null ? [] : [[k, String(v)]])) as [string, string][]`
+        ? `Object.entries({ ${names.join(", ")} }).flatMap(([k, v]) => (v == null ? [] : [[k, String(v)]]))`
         : "[]"
     });
     const res = await fetch(\`${tool.path}?\${params}\`, {
