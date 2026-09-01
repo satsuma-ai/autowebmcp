@@ -1,0 +1,9 @@
+name = "webmcp-autowebmcp-com"
+main = "src/worker.js"
+compatibility_date = "2026-01-01"
+
+# Run the Worker in front of every HTML page on the zone.
+routes = [
+  { pattern = "autowebmcp.com/*", zone_name = "autowebmcp.com" },
+  { pattern = "www.autowebmcp.com/*", zone_name = "autowebmcp.com" },
+]
