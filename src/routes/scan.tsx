@@ -3,8 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { Activity, Brain, Code2, FileSearch, Layers, MousePointer2, Network, ScanLine, Sparkles } from "lucide-react";
 import { Nav } from "@/components/Nav";
+import { useServerFn } from "@tanstack/react-start";
 import { generateProject, parseDomain, classify, categoryLabel, detectCdn } from "@/lib/tool-generator";
-import { projectStore } from "@/lib/store";
+import { projectStore, type ProjectState } from "@/lib/store";
+import { generateWebmcpProject } from "@/lib/webmcp-generate.functions";
 
 const search = z.object({ url: z.string() });
 
@@ -122,7 +124,7 @@ function ScanPage() {
         <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
           Scanning <span className="gradient-text">{domain}</span>
         </h1>
-        <p className="mt-3 text-muted-foreground">Discovering actions agents can safely call.</p>
+        <p className="mt-3 text-muted-foreground">Fetching the live site and designing the tool set agents can safely call.</p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-5">
           {/* Timeline */}
@@ -192,16 +194,20 @@ function ScanPage() {
             </div>
             <dl className="mt-5 space-y-4 text-sm">
               <Row label="Domain" value={domain} mono />
-              <Row label="Category" value={categoryLabel(category)} />
-              <Row label="Primary goal" value={inferGoal(category)} />
-              <Row label="Detected forms" value={step > 2 ? `${2 + Math.floor((step + domain.length) % 4)} forms` : "scanning…"} />
-              <Row label="Detected CTAs" value={step > 3 ? `${5 + Math.floor((step + domain.length) % 8)} CTAs` : "scanning…"} />
+              <Row label="Category" value={result ? categoryLabel(result.category) : "classifying…"} />
+              <Row label="Primary goal" value={result ? result.primaryGoal : inferGoal(classify(domain))} />
+              <Row label="Detected forms" value={result ? `${result.scan.formsFound} forms` : "fetching…"} />
+              <Row label="Detected CTAs" value={result ? `${result.scan.ctasFound} CTAs` : "fetching…"} />
+              <Row label="Endpoint candidates" value={result ? `${result.scan.apiCandidates}` : "fetching…"} />
+              <Row label="Tools designed" value={result ? `${result.tools.length}` : "designing…"} />
               <Row
                 label="Detected edge / CDN"
                 value={step > 0 ? `${cdn.providerName} · ${Math.round(cdn.confidence * 100)}%` : "fingerprinting…"}
               />
-              <Row label="Agent opportunities" value={step > 4 ? "High" : "analyzing…"} />
-              <Row label="Risk level" value={step > 5 ? "Low — safe defaults" : "—"} />
+              <Row
+                label="Risk level"
+                value={result ? (result.tools.some((t) => t.safety !== "safe") ? "Guarded writes present" : "Read-only") : "—"}
+              />
             </dl>
             {step > 0 && (
               <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-[12.5px] text-foreground/80">
