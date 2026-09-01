@@ -55,7 +55,7 @@ function mk(t: ToolSeed): WebMCPTool {
 
 const CATEGORY_SUMMARY: Record<SiteCategory, { summary: string; primaryGoal: string }> = {
   food_delivery: { summary: "On-demand food and grocery delivery marketplace with store search, menus, carts, and order tracking.", primaryGoal: "Turn a craving into a placed, tracked delivery order" },
-  ecommerce: { summary: "Online retail destination with product catalog, search, and checkout flows.", primaryGoal: "Drive product discovery and purchases" },
+  ecommerce: { summary: "Retail commerce site with a browsable catalog, faceted search, variant-level inventory, cart and checkout, store pickup, and post-purchase order and return handling.", primaryGoal: "Take a shopper from product discovery to a priced, fulfillable order" },
   restaurant: { summary: "Hospitality site with menu, reservations, and ordering.", primaryGoal: "Convert visits into reservations and orders" },
   saas: { summary: "Software product site with demo requests, docs, and support.", primaryGoal: "Capture qualified demo and trial signups" },
   healthcare: { summary: "Clinical practice site with appointments, locations, and intake.", primaryGoal: "Convert visits into booked appointments" },
