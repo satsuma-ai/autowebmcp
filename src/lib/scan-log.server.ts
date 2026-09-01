@@ -65,10 +65,10 @@ export async function assertScanAllowed(headers: Headers): Promise<void> {
   const ipHash = await fingerprint(headers);
   try {
     const [ipHour, ipDay, allHour, allDay] = await Promise.all([
-      countSince("scan_throttle", HOUR, ipHash),
-      countSince("scan_throttle", DAY, ipHash),
-      countSince("scan_throttle", HOUR),
-      countSince("scan_throttle", DAY),
+      countSince(HOUR, ipHash),
+      countSince(DAY, ipHash),
+      countSince(HOUR),
+      countSince(DAY),
     ]);
 
     if (ipHour >= LIMITS.perIpPerHour)
