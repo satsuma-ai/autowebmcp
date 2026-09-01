@@ -51,6 +51,7 @@ Quality bar (this is the whole job):
 - method GET for reads, POST for writes. safety: "safe" for reads, "confirmation_required" for anything that mutates a cart/build/booking, "sensitive" for anything touching personal data, money commitment, or account records.
 - names: snake_case verbs. label: short human title. examplePrompt: something a real user would say in the site's own domain language (localized to the site's language when the site is non-English content but keep tool names/schema in English).
 - inputSchema properties: snake_case, typed, with a short description each; mark the real required ones.
+- Evidence may be sparse or empty (large sites block server-side crawlers). In that case rely on your own knowledge of this specific brand, domain, and its real product journeys and URL structure. NEVER fall back to a generic contact/newsletter/site-search set for a site whose business you can recognise from its domain.
 - Never invent third-party origins, tracking, or auth-token exfiltration. Everything must be same-origin.
 
 Return ONLY minified JSON matching:
@@ -138,10 +139,13 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
     }
 
     const apiKey = process.env["LOVABLE_API_KEY"];
-    if (evidence?.reachable && apiKey) {
+    if (apiKey) {
       try {
+        const crawlNote = evidence?.reachable
+          ? "Crawl succeeded; prefer paths visible in the evidence."
+          : `Crawl blocked or failed (${evidence?.note ?? "no response"}). Use your own knowledge of ${domain} and its real user journeys, and infer plausible same-origin paths.`;
         const raw = await callGateway(
-          `Design the WebMCP tool set for this site. Evidence:\n${evidenceBlock(evidence)}`,
+          `Site: ${url}\nCrawl status: ${crawlNote}\n\nEvidence:\n${evidence ? evidenceBlock(evidence) : "{}"}`,
           apiKey,
         );
         const parsed = modelOut.parse(parseJson(raw));
@@ -157,7 +161,8 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
           },
         }));
         const warnings = [...parsed.warnings];
-        if (!evidence.forms.length) warnings.push("No server-rendered forms found; endpoints inferred from navigation and client bundles");
+        if (!evidence?.reachable) warnings.push("Site blocked server-side crawling; tools derived from domain knowledge — verify each endpoint path");
+        else if (!evidence.forms.length) warnings.push("No server-rendered forms found; endpoints inferred from navigation and client bundles");
         return {
           url,
           domain,
@@ -168,10 +173,10 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
           summary: parsed.summary,
           primaryGoal: parsed.primaryGoal,
           scan: {
-            formsFound: evidence.forms.length,
-            ctasFound: evidence.ctas.length,
-            apiCandidates: evidence.apiCandidates.length,
-            confidence: 0.93,
+            formsFound: evidence?.forms.length ?? 0,
+            ctasFound: evidence?.ctas.length ?? 0,
+            apiCandidates: evidence?.apiCandidates.length ?? tools.length,
+            confidence: evidence?.reachable ? 0.93 : 0.84,
             warnings: warnings.slice(0, 4),
           },
           tools,
