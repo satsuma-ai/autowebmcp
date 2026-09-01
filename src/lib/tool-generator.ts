@@ -15,12 +15,12 @@ export function parseDomain(url: string): { domain: string; slug: string; name: 
 
 const KEYWORDS: Record<SiteCategory, string[]> = {
   food_delivery: ["doordash", "ubereats", "grubhub", "postmates", "seamless", "instacart", "deliveroo", "justeat", "gopuff", "delivery"],
-  ecommerce: ["shop", "shops", "store", "stores", "buy", "cart", "amazon", "shopify", "etsy", "walmart", "target", "costco", "bestbuy", "ikea", "zara", "hm", "nike", "adidas", "sephora", "ulta", "wayfair", "chewy", "grocery", "groceries", "supermarket", "market", "mart", "convenience", "7eleven", "circlek", "pharmacy", "drugstore", "walgreens", "cvs", "kroger", "aldi", "tesco", "carrefour", "rewe", "edeka", "outlet", "boutique", "apparel", "retail", "goods", "supply", "depot", "wholesale"],
+  ecommerce: ["shop", "shops", "store", "stores", "buy", "cart", "shopify", "walmart", "target", "costco", "bestbuy", "ikea", "zara", "hm", "nike", "adidas", "sephora", "ulta", "wayfair", "chewy", "grocery", "groceries", "supermarket", "market", "mart", "convenience", "7eleven", "circlek", "pharmacy", "drugstore", "walgreens", "cvs", "kroger", "aldi", "tesco", "carrefour", "rewe", "edeka", "outlet", "boutique", "apparel", "retail", "goods", "supply", "depot", "wholesale"],
   restaurant: ["restaurant", "cafe", "bistro", "pizza", "kitchen", "eats", "menu", "dine", "grill", "sushi", "opentable", "resy"],
   saas: ["app", "io", "ai", "cloud", "labs", "hq", "tech", "soft", "stripe", "linear", "vercel", "notion", "slack", "calendly", "figma"],
   healthcare: ["clinic", "dental", "health", "medical", "care", "doctor", "hospital", "pediatric", "ortho", "derm"],
   real_estate: ["realty", "homes", "estate", "zillow", "redfin", "compass", "realtor", "properties"],
-  marketplace: ["marketplace", "airbnb", "vrbo", "fiverr", "upwork", "thumbtack", "angi", "ebay", "mercari", "poshmark", "depop", "alibaba", "aliexpress", "vinted", "craigslist", "olx", "kleinanzeigen"],
+  marketplace: ["marketplace", "etsy", "amazon", "airbnb", "vrbo", "fiverr", "upwork", "thumbtack", "angi", "ebay", "mercari", "poshmark", "depop", "alibaba", "aliexpress", "vinted", "craigslist", "olx", "kleinanzeigen"],
 
   media: ["news", "times", "post", "blog", "media", "magazine", "nytimes", "verge", "techcrunch"],
   nonprofit: ["foundation", "charity", "nonprofit", "ngo"],
