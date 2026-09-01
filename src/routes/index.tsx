@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Boxes, Cloud, Code2, Globe, PlayCircle, Rocket, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Boxes, Cloud, Code2, Globe, Rocket, Sparkles, Terminal, Zap } from "lucide-react";
 import { useState } from "react";
 import { Nav } from "@/components/Nav";
 import { CodeBlock } from "@/components/CodeBlock";
@@ -8,18 +8,18 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Auto WebMCP by Satsuma.ai — Turn any website into an agent-ready website" },
-      { name: "description", content: "Paste a URL. Auto WebMCP scans your site, generates real document.modelContext tools, and hands you the exact steps to ship them — through your CDN dashboard or your AI website builder." },
+      { name: "description", content: "Paste a URL. Auto WebMCP scans your site, generates real document.modelContext tools, then hands them to your coding agent or to your CDN dashboard." },
     ],
   }),
   component: Landing,
 });
 
 const SAMPLE_TOOLS = [
-  { name: "search_products", type: "search" },
-  { name: "submit_contact_form", type: "form" },
-  { name: "book_appointment", type: "booking" },
-  { name: "check_order_status", type: "account" },
-  { name: "create_support_ticket", type: "support" },
+  { name: "search_restaurants", type: "search" },
+  { name: "get_store_menu", type: "content" },
+  { name: "add_items_to_cart", type: "transaction" },
+  { name: "place_delivery_order", type: "transaction" },
+  { name: "track_order", type: "account" },
 ];
 
 const PROVIDERS = [
@@ -136,11 +136,12 @@ function Landing() {
 
       {/* FEATURES */}
       <section className="mx-auto max-w-7xl px-6 py-24">
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Zap, title: "LLM-inferred actions", desc: "Auto WebMCP scans your homepage, forms, CTAs and journeys to infer agent-callable tools." },
             { icon: Boxes, title: "Structured tools", desc: "Every tool ships with a JSON Schema, safety class, confidence score, and example agent prompt." },
-            { icon: Code2, title: "Ship it your way", desc: "Auto-detects your CDN or host, then gives step-by-step dashboard instructions or a copy-paste prompt for your AI website builder." },
+            { icon: Terminal, title: "Hand it to your coding agent", desc: "Copy one prompt into Codex, Claude Code, Lovable, v0, or Cursor and it wires the tools into your codebase." },
+            { icon: Code2, title: "Or ship it at the edge", desc: "Auto-detects your CDN or host, then gives step-by-step dashboard instructions for Cloudflare, Akamai, Netlify, or Vercel." },
           ].map((f) => (
             <div key={f.title} className="glass rounded-2xl p-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
@@ -156,7 +157,7 @@ function Landing() {
       <footer className="border-t border-border/60 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 text-xs text-muted-foreground sm:flex-row">
           <p>© Satsuma.ai · Auto WebMCP. Agent-ready websites at the edge.</p>
-          <p>Demo mode simulates activation unless provider credentials are connected.</p>
+          <p>Generated tools are real document.modelContext registrations. You choose where they ship.</p>
         </div>
       </footer>
     </div>
