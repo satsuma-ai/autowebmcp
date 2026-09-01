@@ -70,9 +70,17 @@ function GeneratedPage() {
             <ul className="space-y-1.5">
               {project.tools.map((t) => (
                 <li key={t.name}>
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelected(t.name)}
-                    className={`group block w-full rounded-xl border px-3 py-3 text-left transition-colors ${
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelected(t.name);
+                      }
+                    }}
+                    className={`group block w-full cursor-pointer rounded-xl border px-3 py-3 text-left transition-colors ${
                       selected === t.name
                         ? "border-primary/40 bg-primary/8"
                         : "border-transparent hover:border-border/60 hover:bg-white/[0.03]"
@@ -94,7 +102,8 @@ function GeneratedPage() {
                       <SafetyBadge safety={t.safety} />
                       <ConfidenceBadge value={t.confidence} />
                     </div>
-                  </button>
+                  </div>
+
                 </li>
               ))}
             </ul>
