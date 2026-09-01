@@ -13,36 +13,48 @@ export function parseDomain(url: string): { domain: string; slug: string; name: 
   return { domain, slug: domain.replace(/[^a-z0-9]+/gi, "-").toLowerCase(), name };
 }
 
+// Keywords are matched against domain *tokens* (split on dots/dashes/digits), not raw
+// substrings, so "autowebmcp.lovable.app" never reads as an automotive site.
 const KEYWORDS: Record<SiteCategory, string[]> = {
-  food_delivery: ["doordash", "ubereats", "grubhub", "postmates", "seamless", "instacart", "deliveroo", "justeat", "gopuff", "delivery"],
-  ecommerce: ["shop", "shops", "store", "stores", "buy", "cart", "shopify", "walmart", "target", "costco", "bestbuy", "ikea", "zara", "hm", "nike", "adidas", "sephora", "ulta", "wayfair", "chewy", "grocery", "groceries", "supermarket", "market", "mart", "convenience", "7eleven", "circlek", "pharmacy", "drugstore", "walgreens", "cvs", "kroger", "aldi", "tesco", "carrefour", "rewe", "edeka", "outlet", "boutique", "apparel", "retail", "goods", "supply", "depot", "wholesale"],
-  restaurant: ["restaurant", "cafe", "bistro", "pizza", "kitchen", "eats", "menu", "dine", "grill", "sushi", "opentable", "resy"],
-  saas: ["app", "io", "ai", "cloud", "labs", "hq", "tech", "soft", "stripe", "linear", "vercel", "notion", "slack", "calendly", "figma"],
-  healthcare: ["clinic", "dental", "health", "medical", "care", "doctor", "hospital", "pediatric", "ortho", "derm"],
-  real_estate: ["realty", "homes", "estate", "zillow", "redfin", "compass", "realtor", "properties"],
+  food_delivery: ["doordash", "ubereats", "grubhub", "postmates", "seamless", "instacart", "deliveroo", "justeat", "gopuff", "wolt", "foodpanda"],
+  ecommerce: ["shop", "shops", "store", "stores", "shopify", "walmart", "target", "costco", "bestbuy", "ikea", "zara", "nike", "adidas", "sephora", "ulta", "wayfair", "chewy", "grocery", "groceries", "supermarket", "convenience", "7eleven", "circlek", "pharmacy", "drugstore", "walgreens", "cvs", "kroger", "aldi", "tesco", "carrefour", "rewe", "edeka", "outlet", "boutique", "apparel", "retail", "wholesale"],
+  restaurant: ["restaurant", "cafe", "bistro", "pizza", "kitchen", "dine", "grill", "sushi", "opentable", "resy", "trattoria", "steakhouse"],
+  saas: ["stripe", "linear", "vercel", "notion", "slack", "calendly", "figma", "datadog", "twilio", "atlassian", "hubspot", "salesforce", "zendesk", "intercom", "webmcp", "satsuma"],
+  healthcare: ["clinic", "dental", "dentist", "health", "medical", "doctor", "hospital", "pediatrics", "orthodontics", "dermatology"],
+  real_estate: ["realty", "homes", "estate", "zillow", "redfin", "compass", "realtor", "properties", "immobilien"],
   marketplace: ["marketplace", "etsy", "amazon", "airbnb", "vrbo", "fiverr", "upwork", "thumbtack", "angi", "ebay", "mercari", "poshmark", "depop", "alibaba", "aliexpress", "vinted", "craigslist", "olx", "kleinanzeigen"],
 
-  media: ["news", "times", "post", "blog", "media", "magazine", "nytimes", "verge", "techcrunch"],
+  media: ["news", "nytimes", "verge", "techcrunch", "magazine", "guardian", "bloomberg", "wired"],
   nonprofit: ["foundation", "charity", "nonprofit", "ngo"],
-  automotive: ["mercedes", "benz", "bmw", "audi", "volkswagen", "porsche", "toyota", "honda", "ford", "hyundai", "kia", "volvo", "tesla", "nissan", "lexus", "jaguar", "renault", "peugeot", "motors", "automobile", "autohaus", "carmax", "cars", "auto"],
-  travel: ["airlines", "airline", "flights", "hotel", "hotels", "booking", "expedia", "marriott", "hilton", "lufthansa", "delta", "travel", "cruise", "resort"],
+  automotive: ["mercedes", "benz", "bmw", "audi", "volkswagen", "porsche", "toyota", "honda", "hyundai", "kia", "volvo", "tesla", "nissan", "lexus", "jaguar", "renault", "peugeot", "skoda", "motors", "automobile", "autohaus", "carmax", "cargurus", "autotrader", "carvana", "dealership"],
+  travel: ["airlines", "airline", "flights", "hotel", "hotels", "expedia", "marriott", "hilton", "lufthansa", "cruise", "resort", "kayak", "skyscanner", "airbnb"],
   generic: [],
 };
 
+function tokenize(domain: string): string[] {
+  return domain
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter(Boolean);
+}
 
 export function classify(domain: string): SiteCategory {
-  const d = domain.toLowerCase();
+  const tokens = tokenize(domain);
+  const tokenSet = new Set(tokens);
   let best: { cat: SiteCategory; len: number } | null = null;
   for (const [cat, words] of Object.entries(KEYWORDS) as [SiteCategory, string[]][]) {
     for (const w of words) {
-      if (d.includes(w) && (!best || w.length > best.len)) best = { cat, len: w.length };
+      // Exact token match, or a long keyword contained in a long token (compound brands).
+      const hit = tokenSet.has(w) || (w.length >= 6 && tokens.some((t) => t.length >= w.length + 2 && t.includes(w)));
+      if (hit && (!best || w.length > best.len)) best = { cat, len: w.length };
     }
   }
   if (best) return best.cat;
-  if (d.endsWith(".org")) return "nonprofit";
-  if (d.endsWith(".io") || d.endsWith(".ai") || d.endsWith(".dev")) return "saas";
+  if (domain.endsWith(".org")) return "nonprofit";
+  if (/\.(io|ai|dev|app)$/.test(domain)) return "saas";
   return "generic";
 }
+
 
 
 interface ToolSeed extends Omit<WebMCPTool, "enabled" | "confidence"> {
