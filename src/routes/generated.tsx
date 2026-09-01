@@ -49,7 +49,7 @@ function GeneratedPage() {
             to="/activate"
             className="glow inline-flex h-12 items-center gap-2 self-end rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:scale-[1.02] transition-transform"
           >
-            Activate at the edge <ArrowRight className="h-4 w-4" />
+            Ship it to your site <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
