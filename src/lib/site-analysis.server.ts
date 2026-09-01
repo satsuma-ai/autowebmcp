@@ -92,7 +92,7 @@ function uniq(arr: string[], limit: number): string[] {
   return Array.from(new Set(arr.filter(Boolean))).slice(0, limit);
 }
 
-async function get(url: string, timeoutMs = 9000) {
+async function get(url: string, timeoutMs = 20000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -167,7 +167,7 @@ export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
   await Promise.all(
     candidates.map(async (c) => {
       try {
-        const r = await get(c, 7000);
+        const r = await get(c, 12000);
         if (r.body) pages.push({ url: c, html: r.body });
       } catch {
         /* ignore */
