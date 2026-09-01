@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, CheckCircle2, Copy, Download, ExternalLink, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Copy, Download, ExternalLink} from "lucide-react";
 import { Nav } from "@/components/Nav";
-import { useProject } from "@/lib/store";
+import { useProject, projectStore } from "@/lib/store";
 import { CodeBlock } from "@/components/CodeBlock";
 import { parseDomain } from "@/lib/tool-generator";
 import { bridgeScript, manifest, DEPLOY_TARGETS, WEBMCP_DOCS, type DeployTargetId } from "@/lib/webmcp-codegen";
@@ -27,9 +27,13 @@ function SuccessPage() {
   const navigate = useNavigate();
   const [targetId, setTargetId] = useState<DeployTargetId>("cloudflare");
 
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (!project) navigate({ to: "/" });
-  }, [project, navigate]);
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (ready && !projectStore.get()) navigate({ to: "/" });
+  }, [ready, navigate]);
 
   useEffect(() => {
     const p = project?.selectedProvider;
@@ -218,12 +222,6 @@ await navigator.modelContextTesting.executeTool(
         </div>
 
         <div className="mt-12 flex flex-wrap justify-center gap-3">
-          <Link
-            to="/agent-preview"
-            className="glow inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:scale-[1.02] transition-transform"
-          >
-            <Sparkles className="h-4 w-4" /> Open agent preview
-          </Link>
           <button
             onClick={() => {
               download(

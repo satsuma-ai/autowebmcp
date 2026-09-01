@@ -17,9 +17,13 @@ function GeneratedPage() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string | null>(null);
 
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (!project) navigate({ to: "/" });
-  }, [project, navigate]);
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (ready && !projectStore.get()) navigate({ to: "/" });
+  }, [ready, navigate]);
 
   useEffect(() => {
     if (project && !selected && project.tools[0]) setSelected(project.tools[0].name);

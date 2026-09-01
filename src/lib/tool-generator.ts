@@ -14,7 +14,8 @@ export function parseDomain(url: string): { domain: string; slug: string; name: 
 }
 
 const KEYWORDS: Record<SiteCategory, string[]> = {
-  ecommerce: ["shop", "store", "buy", "cart", "amazon", "shopify", "etsy", "ebay", "walmart", "target", "doordash", "ubereats", "instacart"],
+  food_delivery: ["doordash", "ubereats", "grubhub", "postmates", "seamless", "instacart", "deliveroo", "justeat", "delivery"],
+  ecommerce: ["shop", "store", "buy", "cart", "amazon", "shopify", "etsy", "ebay", "walmart", "target"],
   restaurant: ["restaurant", "cafe", "bistro", "pizza", "kitchen", "eats", "menu", "dine", "grill", "sushi", "opentable", "resy"],
   saas: ["app", "io", "ai", "cloud", "labs", "hq", "tech", "soft", "stripe", "linear", "vercel", "notion", "slack", "calendly", "figma"],
   healthcare: ["clinic", "dental", "health", "medical", "care", "doctor", "hospital", "pediatric", "ortho", "derm"],
@@ -24,6 +25,7 @@ const KEYWORDS: Record<SiteCategory, string[]> = {
   nonprofit: ["org", "foundation", "charity", "nonprofit", "ngo"],
   generic: [],
 };
+
 
 export function classify(domain: string): SiteCategory {
   const d = domain.toLowerCase();
@@ -44,6 +46,7 @@ function mk(t: ToolSeed): WebMCPTool {
 }
 
 const CATEGORY_SUMMARY: Record<SiteCategory, { summary: string; primaryGoal: string }> = {
+  food_delivery: { summary: "On-demand food and grocery delivery marketplace with store search, menus, carts, and order tracking.", primaryGoal: "Turn a craving into a placed, tracked delivery order" },
   ecommerce: { summary: "Online retail destination with product catalog, search, and checkout flows.", primaryGoal: "Drive product discovery and purchases" },
   restaurant: { summary: "Hospitality site with menu, reservations, and ordering.", primaryGoal: "Convert visits into reservations and orders" },
   saas: { summary: "Software product site with demo requests, docs, and support.", primaryGoal: "Capture qualified demo and trial signups" },
@@ -57,6 +60,15 @@ const CATEGORY_SUMMARY: Record<SiteCategory, { summary: string; primaryGoal: str
 
 function toolsFor(category: SiteCategory, name: string): WebMCPTool[] {
   switch (category) {
+    case "food_delivery":
+      return [
+        mk({ name: "search_restaurants", label: "Search restaurants and stores", description: `Search ${name} for restaurants and stores that deliver to an address, with cuisine, price, rating, and delivery-time filters.`, type: "search", method: "GET", path: "/api/v1/search/stores", safety: "safe", inputSchema: { type: "object", properties: { query: { type: "string", description: "Cuisine, dish, or store name" }, address: { type: "string", description: "Delivery address or ZIP" }, max_delivery_minutes: { type: "number" }, min_rating: { type: "number" } }, required: ["query", "address"] }, examplePrompt: `Find Thai places on ${name} delivering to 60614 in under 30 minutes` }),
+        mk({ name: "get_store_menu", label: "Get a store menu", description: "Fetch the live menu for a store, including item prices, options, and out-of-stock state.", type: "content", method: "GET", path: "/api/v1/stores/menu", safety: "safe", inputSchema: { type: "object", properties: { store_id: { type: "string" }, section: { type: "string", description: "Optional menu section" } }, required: ["store_id"] }, examplePrompt: "Show me the noodle section of that restaurant's menu" }),
+        mk({ name: "add_items_to_cart", label: "Add items to cart", description: "Add one or more menu items with options and quantities to the current delivery cart.", type: "transaction", method: "POST", path: "/api/v1/cart/items", safety: "confirmation_required", inputSchema: { type: "object", properties: { store_id: { type: "string" }, item_id: { type: "string" }, quantity: { type: "number" }, options: { type: "string", description: "Comma separated option ids" }, special_instructions: { type: "string" } }, required: ["store_id", "item_id", "quantity"] }, examplePrompt: "Add two pad thai, medium spice, no peanuts" }),
+        mk({ name: "quote_delivery", label: "Quote delivery fees and ETA", description: "Return delivery fee, taxes, service fee, and estimated arrival window for the current cart and address.", type: "content", method: "GET", path: "/api/v1/cart/quote", safety: "safe", inputSchema: { type: "object", properties: { cart_id: { type: "string" }, address: { type: "string" }, tip: { type: "number" } }, required: ["cart_id", "address"] }, examplePrompt: "What's the total with fees and how long will it take?" }),
+        mk({ name: "place_delivery_order", label: "Place the delivery order", description: "Submit the cart as a delivery order using the saved payment method. Requires explicit user confirmation.", type: "transaction", method: "POST", path: "/api/v1/orders", safety: "confirmation_required", inputSchema: { type: "object", properties: { cart_id: { type: "string" }, address: { type: "string" }, tip: { type: "number" }, dropoff_instructions: { type: "string" } }, required: ["cart_id", "address"] }, examplePrompt: "Place the order, leave it at the door, $5 tip" }),
+        mk({ name: "track_order", label: "Track an order", description: "Get live status, courier location, and ETA for an in-progress order.", type: "account", method: "GET", path: "/api/v1/orders/track", safety: "sensitive", inputSchema: { type: "object", properties: { order_id: { type: "string" } }, required: ["order_id"] }, examplePrompt: "Where is my order right now?" }),
+      ];
     case "ecommerce":
       return [
         mk({ name: "search_products", label: "Search products", description: `Search the ${name} catalog by keyword, category, and filters.`, type: "search", method: "GET", path: "/api/search", safety: "safe", inputSchema: { type: "object", properties: { query: { type: "string", description: "Search keywords" }, category: { type: "string" }, max_price: { type: "number" } }, required: ["query"] }, examplePrompt: `Find wireless headphones under $200 on ${name}` }),
@@ -128,27 +140,11 @@ function toolsFor(category: SiteCategory, name: string): WebMCPTool[] {
 const CDN_PROVIDERS: { id: string; name: string }[] = [
   { id: "cloudflare", name: "Cloudflare Workers" },
   { id: "akamai", name: "Akamai EdgeWorkers" },
-  { id: "fastly", name: "Fastly Compute / VCL" },
-  { id: "human", name: "HUMAN Enforcer" },
-  { id: "datadome", name: "DataDome Edge Module" },
+  { id: "netlify", name: "Netlify Edge Functions" },
+  { id: "vercel", name: "Vercel / Next.js" },
 ];
 
-const CDN_OVERRIDES: Record<string, string> = {
-  "doordash.com": "cloudflare",
-  "ubereats.com": "fastly",
-  "opentable.com": "akamai",
-  "calendly.com": "cloudflare",
-  "zillow.com": "fastly",
-  "shopify.com": "cloudflare",
-  "stripe.com": "cloudflare",
-  "linear.app": "cloudflare",
-  "notion.so": "cloudflare",
-  "figma.com": "fastly",
-  "vercel.com": "cloudflare",
-  "nytimes.com": "fastly",
-  "airbnb.com": "akamai",
-  "amazon.com": "akamai",
-};
+const CDN_OVERRIDES: Record<string, string> = {};
 
 function evidenceFor(providerId: string, domain: string): string[] {
   switch (providerId) {
@@ -164,23 +160,17 @@ function evidenceFor(providerId: string, domain: string): string[] {
         `akamai-grn request id present`,
         `edge hostname pattern *.edgekey.net`,
       ];
-    case "fastly":
+    case "netlify":
       return [
-        `server: fastly response header on ${domain}`,
-        `x-served-by: cache-* edge POPs`,
-        `x-cache: HIT, HIT chain detected`,
+        `server: Netlify response header on ${domain}`,
+        `x-nf-request-id present`,
+        `netlify edge function invocation observed`,
       ];
-    case "human":
+    case "vercel":
       return [
-        `_px3 / _pxhd cookies present on ${domain}`,
-        `HUMAN sensor script loaded`,
-        `Enforcer challenge response observed`,
-      ];
-    case "datadome":
-      return [
-        `datadome cookie present on ${domain}`,
-        `js.datadome.co tag loaded`,
-        `x-datadome response header observed`,
+        `server: Vercel response header on ${domain}`,
+        `x-vercel-id: iad1 edge region observed`,
+        `x-vercel-cache: HIT on static assets`,
       ];
     default:
       return [`CDN fingerprint matched for ${domain}`];
@@ -209,7 +199,7 @@ export function detectCdn(domain: string): import("./store").DetectedCdn {
 
 export function generateProject(rawUrl: string): ProjectState {
   const url = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
-  const { domain, slug, name } = parseDomain(url);
+  const { domain, name } = parseDomain(url);
   const category = classify(domain);
   const { summary, primaryGoal } = CATEGORY_SUMMARY[category];
   const tools = toolsFor(category, name);
@@ -228,12 +218,11 @@ export function generateProject(rawUrl: string): ProjectState {
       ctasFound,
       apiCandidates: tools.length,
       confidence: 0.88 + Math.random() * 0.08,
-      warnings: category === "generic" ? ["Limited structured data detected — using safe defaults"] : [],
+      warnings: category === "generic" ? ["Limited structured data detected, using safe defaults"] : [],
     },
     tools,
     detectedCdn,
     activationStatus: "idle",
-    previewUrl: `https://agent-preview.autowebmcp.demo/${slug}`,
     createdAt: Date.now(),
   };
 }

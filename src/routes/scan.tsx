@@ -204,6 +204,7 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
 
 function inferGoal(c: ReturnType<typeof classify>): string {
   return {
+    food_delivery: "Turn cravings into tracked orders",
     ecommerce: "Drive purchases",
     restaurant: "Capture reservations",
     saas: "Capture demo requests",

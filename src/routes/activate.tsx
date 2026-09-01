@@ -48,11 +48,15 @@ function ActivatePage() {
   const navigate = useNavigate();
   const detectedId = project?.detectedCdn.providerId;
   const [targetId, setTargetId] = useState<DeployTargetId>("cloudflare");
-  const [mode, setMode] = useState<"dashboard" | "prompt">("dashboard");
+  const [mode, setMode] = useState<"prompt" | "dashboard">("prompt");
 
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (!project) navigate({ to: "/" });
-  }, [project, navigate]);
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (ready && !projectStore.get()) navigate({ to: "/" });
+  }, [ready, navigate]);
 
   useEffect(() => {
     if (detectedId && DEPLOY_TARGETS.some((t) => t.id === detectedId)) {
@@ -81,8 +85,8 @@ function ActivatePage() {
           Ship WebMCP to <span className="gradient-text">{project.domain}</span>
         </h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          Nothing is deployed for you. Pick where your site is served from, then either follow the exact steps in that
-          provider's dashboard or hand the generated prompt to your AI website builder.
+          Nothing is deployed for you. Copy the generated prompt into your coding agent, or follow the exact steps in
+          your provider's dashboard.
         </p>
 
         {/* Detection */}
@@ -97,7 +101,7 @@ function ActivatePage() {
               </span>
             </div>
             <span className="text-xs text-muted-foreground">
-              Detection is a starting point — pick any target below.
+              Detection is a starting point. Pick any target below.
             </span>
           </div>
           <ul className="mt-3 grid gap-1 text-[11.5px] font-mono text-muted-foreground/90 sm:grid-cols-3">
@@ -107,46 +111,12 @@ function ActivatePage() {
           </ul>
         </div>
 
-        {/* Target picker */}
-        <div className="mt-8">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Where is {project.domain} served from?
-          </h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {DEPLOY_TARGETS.map((t) => {
-              const active = t.id === targetId;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => choose(t.id)}
-                  className={`glass relative rounded-xl p-4 text-left transition-colors ${
-                    active ? "border-primary/50 ring-1 ring-primary/40" : "hover:border-white/15"
-                  }`}
-                >
-                  {t.id === detectedId && (
-                    <span className="absolute -top-2.5 left-4 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
-                      Detected
-                    </span>
-                  )}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">{t.name}</span>
-                    <span className="rounded-full border border-border/70 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {t.kind}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[12.5px] leading-relaxed text-muted-foreground">{t.summary}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Path picker */}
         <div className="mt-10 flex flex-wrap gap-2">
           {(
             [
+              ["prompt", "Give it to your coding agent"],
               ["dashboard", `Do it in ${target.name}`],
-              ["prompt", "Give it to my AI website builder"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -227,7 +197,7 @@ function ActivatePage() {
             <div className="glass rounded-2xl p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-semibold">Paste this into Lovable, v0, Cursor, or Claude Code</h3>
+                  <h3 className="text-base font-semibold">Paste this into Codex, Claude Code, Lovable, v0, or Cursor</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Written for {target.name}, with all {enabled.length} generated tools and the full{" "}
                     <span className="font-mono">webmcp-tools.js</span> module inlined so the agent has everything it
@@ -261,6 +231,40 @@ function ActivatePage() {
             </div>
           </div>
         )}
+
+        {/* Target picker */}
+        <div className="mt-8">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Where is {project.domain} served from?
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {DEPLOY_TARGETS.map((t) => {
+              const active = t.id === targetId;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => choose(t.id)}
+                  className={`glass relative rounded-xl p-4 text-left transition-colors ${
+                    active ? "border-primary/50 ring-1 ring-primary/40" : "hover:border-white/15"
+                  }`}
+                >
+                  {t.id === detectedId && (
+                    <span className="absolute -top-2.5 left-4 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
+                      Detected
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">{t.name}</span>
+                    <span className="rounded-full border border-border/70 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {t.kind}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[12.5px] leading-relaxed text-muted-foreground">{t.summary}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="mt-12">
           <Link
