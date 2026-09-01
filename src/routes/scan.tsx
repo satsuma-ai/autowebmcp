@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import { Activity, Brain, Code2, FileSearch, Layers, MousePointer2, Network, ScanLine, Sparkles } from "lucide-react";
+import { Activity, Brain, Code2, FileSearch, Layers, MousePointer2, Network, ScanLine, ShieldCheck, Sparkles } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { useServerFn } from "@tanstack/react-start";
 import { generateProject, parseDomain, classify, categoryLabel, detectCdn } from "@/lib/tool-generator";
@@ -20,6 +20,7 @@ const STEPS = [
   { icon: FileSearch, label: "Fetching homepage HTML" },
   { icon: Layers, label: "Extracting forms, buttons, links, and structured data" },
   { icon: MousePointer2, label: "Classifying user journeys" },
+  { icon: ShieldCheck, label: "Checking for existing WebMCP / MCP tooling" },
   { icon: Brain, label: "Inferring agent-safe actions" },
   { icon: Code2, label: "Generating WebMCP tool schemas" },
   { icon: Sparkles, label: "Preparing edge activation bundle" },
@@ -55,7 +56,7 @@ function ScanPage() {
     startedRef.current = true;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const baseDelays = [400, 700, 900, 800, 1100, 900, 800];
+    const baseDelays = [400, 700, 900, 800, 700, 1100, 900, 800];
     let cumulative = 0;
     STEPS.forEach((s, i) => {
       cumulative += baseDelays[i];
@@ -74,6 +75,9 @@ function ScanPage() {
         setLogs((prev) => [
           ...prev,
           `[live] fetched ${project.domain} · ${project.scan.formsFound} forms · ${project.scan.ctasFound} CTAs · ${project.scan.apiCandidates} endpoint candidates`,
+          project.existingWebmcp?.present
+            ? `[live] existing agent tooling detected${project.existingWebmcp.platform ? ` (${project.existingWebmcp.platform})` : ""}: ${project.existingWebmcp.kind === "webmcp" ? "in-page WebMCP tools" : "remote MCP server"}${project.existingWebmcp.toolNames.length ? ` · ${project.existingWebmcp.toolNames.slice(0, 6).join(", ")}` : ""}`
+            : `[live] no existing WebMCP tools found${project.platform ? ` on this ${project.platform} site` : ""}`,
           `[live] designed ${project.tools.length} WebMCP tools for "${project.primaryGoal}"`,
           ...project.scan.warnings.map((w) => `[warn] ${w}`),
         ]);
@@ -199,6 +203,19 @@ function ScanPage() {
               <Row label="Detected forms" value={result ? `${result.scan.formsFound} forms` : "fetching…"} />
               <Row label="Detected CTAs" value={result ? `${result.scan.ctasFound} CTAs` : "fetching…"} />
               <Row label="Endpoint candidates" value={result ? `${result.scan.apiCandidates}` : "fetching…"} />
+              <Row label="Platform" value={result ? (result.platform ?? "custom / unknown") : "fingerprinting…"} />
+              <Row
+                label="Existing WebMCP"
+                value={
+                  result
+                    ? result.existingWebmcp?.present
+                      ? result.existingWebmcp.kind === "webmcp"
+                        ? "Yes · in-page tools"
+                        : "Partial · MCP server only"
+                      : "None found"
+                    : "probing…"
+                }
+              />
               <Row label="Tools designed" value={result ? `${result.tools.length}` : "designing…"} />
               <Row
                 label="Detected edge / CDN"
@@ -209,6 +226,19 @@ function ScanPage() {
                 value={result ? (result.tools.some((t) => t.safety !== "safe") ? "Guarded writes present" : "Read-only") : "—"}
               />
             </dl>
+            {result?.existingWebmcp?.present && (
+              <div className="mt-6 rounded-lg border border-success/25 bg-success/5 p-4 text-[12.5px]">
+                <div className="font-medium text-success">
+                  {result.existingWebmcp.kind === "webmcp" ? "Already exposes WebMCP" : "Already exposes an MCP server"}
+                </div>
+                <p className="mt-1 leading-relaxed text-muted-foreground">{result.existingWebmcp.note}</p>
+                <ul className="mt-2 space-y-0.5 font-mono text-[11.5px] text-muted-foreground/90">
+                  {result.existingWebmcp.signals.map((sig) => (
+                    <li key={sig}>· {sig}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {step > 0 && (
               <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-[12.5px] text-foreground/80">
                 <div className="flex items-center justify-between">
