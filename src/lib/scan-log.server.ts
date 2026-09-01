@@ -43,18 +43,13 @@ export async function fingerprint(headers: Headers): Promise<string> {
     .join("");
 }
 
-async function countSince(
-  table: "scan_throttle" | "scan_events",
-  sinceMs: number,
-  ipHash?: string,
-): Promise<number> {
+async function countSince(sinceMs: number, ipHash?: string): Promise<number> {
   const db = await admin();
-  let q = db
-    .from(table)
+  const base = db
+    .from("scan_throttle")
     .select("id", { count: "exact", head: true })
     .gte("created_at", new Date(Date.now() - sinceMs).toISOString());
-  if (ipHash) q = q.eq("ip_hash", ipHash);
-  const { count, error } = await q;
+  const { count, error } = await (ipHash ? base.eq("ip_hash", ipHash) : base);
   if (error) throw error;
   return count ?? 0;
 }
