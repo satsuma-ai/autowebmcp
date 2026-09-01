@@ -48,6 +48,17 @@ export interface DetectedCdn {
   confidence: number;
 }
 
+export interface ExistingWebmcpInfo {
+  present: boolean;
+  kind: "none" | "webmcp" | "mcp-server";
+  platform?: string;
+  signals: string[];
+  endpoints: string[];
+  toolNames: string[];
+  confidence: number;
+  note?: string;
+}
+
 export interface ProjectState {
   url: string;
   domain: string;
@@ -58,6 +69,8 @@ export interface ProjectState {
   scan: ScanResult;
   tools: WebMCPTool[];
   detectedCdn: DetectedCdn;
+  platform?: string;
+  existingWebmcp?: ExistingWebmcpInfo;
   selectedProvider?: string;
   activationStatus: "idle" | "activating" | "active";
   previewUrl?: string;
