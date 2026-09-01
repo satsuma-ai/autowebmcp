@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      scan_events: {
+        Row: {
+          category: string | null
+          created_at: string
+          domain: string
+          id: string
+          site_name: string | null
+          source: string
+          tool_count: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          domain: string
+          id?: string
+          site_name?: string | null
+          source?: string
+          tool_count?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          domain?: string
+          id?: string
+          site_name?: string | null
+          source?: string
+          tool_count?: number
+        }
+        Relationships: []
+      }
+      scan_throttle: {
+        Row: {
+          created_at: string
+          id: string
+          ip_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_hash?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
