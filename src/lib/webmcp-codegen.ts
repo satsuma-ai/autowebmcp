@@ -423,34 +423,35 @@ export function manifest(domain: string, tools: WebMCPTool[]) {
  * The exact prompt to paste into an AI website builder / coding agent
  * (Lovable, v0, Cursor, Claude Code…) so it implements WebMCP for real.
  */
-export function aiBuilderPrompt(domain: string, tools: WebMCPTool[], target: DeployTarget): string {
+export function aiBuilderPrompt(domain: string, tools: WebMCPTool[], target?: DeployTarget): string {
   const enabled = tools.filter((t) => t.enabled);
-  return `Implement WebMCP on ${domain} so AI browser agents can call our site's actions directly.
+  const guarded = enabled.filter((t) => t.safety !== "safe").map((t) => t.name);
+  const edge = target?.kind === "edge";
 
-Spec to follow (do not invent an API): ${WEBMCP_DOCS.chromeImperative}
-Registration surface is \`document.modelContext.registerTool({ name, description, inputSchema, execute })\`.
-Keep \`navigator.modelContext\` only as a deprecated fallback for older builds.
+  const routes = enabled
+    .map((t) => `- ${t.name}: ${t.method} ${t.path}${guarded.includes(t.name) ? " (confirm before running)" : ""}`)
+    .join("\n");
 
-Deployment target: ${target.name} — ${target.summary}
-Reference docs: ${target.docsUrl}
+  const edgeSection = target
+    ? `\nDeploy it through ${target.name}: ${target.summary}\nDocs: ${target.docsUrl}\n`
+    : "";
 
-Tasks:
-1. Add a module file \`webmcp-tools.js\` (exact contents at the bottom of this message) and serve it from the site root as \`/webmcp-tools.js\`.
-2. Load it once on every page with \`<script type="module" src="/webmcp-tools.js"></script>\`${
-    target.kind === "edge" ? ` — injected at the edge, per ${target.name}, so the origin markup is untouched.` : " in the root layout/document."
-  }
-3. Wire each tool's \`execute\` to our real endpoint. Replace any placeholder path below with the actual route, and fix the request/response shape if it differs:
-${enabled.map((t) => `   - ${t.name}: ${t.method} ${t.path} (args: ${Object.keys(t.inputSchema.properties).join(", ") || "none"})`).join("\n")}
-4. Keep the \`window.confirm\` guard on every non-read-only tool (${
-    enabled.filter((t) => t.safety !== "safe").map((t) => t.name).join(", ") || "none in this set"
-  }) so agents cannot commit money or data without user consent.
-5. Keep \`annotations.readOnlyHint\` / \`destructiveHint\` / \`untrustedContentHint\` accurate for each tool.
-6. Do not send cookies or auth tokens to any third-party origin; every fetch must stay same-origin.
-7. Verify in Chrome DevTools on ${domain}:
-   \`const tools = await document.modelContext.getTools(); console.table(tools.map(t => t.name));\`
-   All ${enabled.length} tools must be listed with no console errors.
+  return `Add WebMCP to ${domain} so browser AI agents can call our actions.
 
---- webmcp-tools.js ---
+Spec: ${WEBMCP_DOCS.chromeImperative} — register with \`document.modelContext.registerTool({ name, description, inputSchema, execute })\`.
+${edgeSection}
+Do this:
+1. Add the file below as \`public/webmcp-tools.js\` so it is served at \`/webmcp-tools.js\`.
+2. Load it once${edge ? ` at the edge (${target!.name}), leaving origin markup untouched` : " in the root layout"}: \`<script type="module" src="/webmcp-tools.js"></script>\`.
+3. Point each tool's fetch at the real route on our site, keeping every request same-origin. If a route below does not exist yet, create it or change the path to the one that does:
+${routes}
+4. Keep the confirm prompt and the readOnlyHint / destructiveHint annotations exactly as generated.
+
+Do not add anything else: no SDKs, no server for the tools, no extra config files.
+
+Verify in Chrome on ${domain}: \`(await document.modelContext.getTools()).map(t => t.name)\` lists all ${enabled.length} tools with no console errors.
+
+--- public/webmcp-tools.js ---
 ${bridgeScript(domain, tools)}
---- end webmcp-tools.js ---`;
+--- end ---`;
 }
