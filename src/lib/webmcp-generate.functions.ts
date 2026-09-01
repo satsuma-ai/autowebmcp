@@ -259,4 +259,11 @@ export async function buildProject(rawUrl: string): Promise<ProjectState> {
 
 export const generateWebmcpProject = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ url: z.string().min(3) }).parse(d))
-  .handler(async ({ data }): Promise<ProjectState> => buildProject(data.url));
+  .handler(async ({ data }): Promise<ProjectState> => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { assertScanAllowed, logScan } = await import("./scan-log.server");
+    await assertScanAllowed(getRequest().headers);
+    const project = await buildProject(data.url);
+    await logScan(project, "ui");
+    return project;
+  });
