@@ -101,11 +101,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
 
-  useEffect(() => {
-    return registerAppTools((path) => router.navigate({ href: path }));
-  }, [router]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
