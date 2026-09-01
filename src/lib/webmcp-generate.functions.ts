@@ -254,4 +254,9 @@ export async function buildProject(rawUrl: string): Promise<ProjectState> {
       ];
     }
     return fallback;
-  });
+  }
+}
+
+export const generateWebmcpProject = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ url: z.string().min(3) }).parse(d))
+  .handler(async ({ data }): Promise<ProjectState> => buildProject(data.url));
