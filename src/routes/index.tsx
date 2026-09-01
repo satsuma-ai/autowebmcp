@@ -118,6 +118,9 @@ function Landing() {
         </div>
       </section>
 
+      {/* LIVE SCAN FEED */}
+      <LiveScans />
+
       {/* TRUST STRIP */}
       <section className="border-y border-border/60 bg-card/20 py-10">
         <div className="mx-auto max-w-7xl px-6">
