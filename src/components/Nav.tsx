@@ -25,7 +25,7 @@ export function Nav() {
         </nav>
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[11px] text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Demo mode
+            <span className="h-1.5 w-1.5 rounded-full bg-success" /> WebMCP live on this page
           </span>
         </div>
       </div>
