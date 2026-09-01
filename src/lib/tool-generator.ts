@@ -14,7 +14,8 @@ export function parseDomain(url: string): { domain: string; slug: string; name: 
 }
 
 const KEYWORDS: Record<SiteCategory, string[]> = {
-  ecommerce: ["shop", "store", "buy", "cart", "amazon", "shopify", "etsy", "ebay", "walmart", "target", "doordash", "ubereats", "instacart"],
+  food_delivery: ["doordash", "ubereats", "grubhub", "postmates", "seamless", "instacart", "deliveroo", "justeat", "delivery"],
+  ecommerce: ["shop", "store", "buy", "cart", "amazon", "shopify", "etsy", "ebay", "walmart", "target"],
   restaurant: ["restaurant", "cafe", "bistro", "pizza", "kitchen", "eats", "menu", "dine", "grill", "sushi", "opentable", "resy"],
   saas: ["app", "io", "ai", "cloud", "labs", "hq", "tech", "soft", "stripe", "linear", "vercel", "notion", "slack", "calendly", "figma"],
   healthcare: ["clinic", "dental", "health", "medical", "care", "doctor", "hospital", "pediatric", "ortho", "derm"],
@@ -24,6 +25,7 @@ const KEYWORDS: Record<SiteCategory, string[]> = {
   nonprofit: ["org", "foundation", "charity", "nonprofit", "ngo"],
   generic: [],
 };
+
 
 export function classify(domain: string): SiteCategory {
   const d = domain.toLowerCase();
