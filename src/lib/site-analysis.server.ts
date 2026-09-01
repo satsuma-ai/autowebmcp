@@ -420,6 +420,8 @@ export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
     headings,
     bodyText: text(pages[0].html).slice(0, 6000),
     headers,
+    platform,
+    existingWebmcp,
     reachable: true,
   };
 }
