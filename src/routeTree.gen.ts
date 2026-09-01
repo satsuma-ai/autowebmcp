@@ -14,6 +14,7 @@ import { Route as ScanRouteImport } from './routes/scan'
 import { Route as GeneratedRouteImport } from './routes/generated'
 import { Route as ActivateRouteImport } from './routes/activate'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiToolsRouteImport } from './routes/api/tools'
 import { Route as ApiStatusRouteImport } from './routes/api/status'
 import { Route as ApiGenerateRouteImport } from './routes/api/generate'
 
@@ -42,6 +43,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiToolsRoute = ApiToolsRouteImport.update({
+  id: '/api/tools',
+  path: '/api/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStatusRoute = ApiStatusRouteImport.update({
   id: '/api/status',
   path: '/api/status',
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/success': typeof SuccessRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/status': typeof ApiStatusRoute
+  '/api/tools': typeof ApiToolsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/success': typeof SuccessRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/status': typeof ApiStatusRoute
+  '/api/tools': typeof ApiToolsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/success': typeof SuccessRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/status': typeof ApiStatusRoute
+  '/api/tools': typeof ApiToolsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/success'
     | '/api/generate'
     | '/api/status'
+    | '/api/tools'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/success'
     | '/api/generate'
     | '/api/status'
+    | '/api/tools'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/success'
     | '/api/generate'
     | '/api/status'
+    | '/api/tools'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   SuccessRoute: typeof SuccessRoute
   ApiGenerateRoute: typeof ApiGenerateRoute
   ApiStatusRoute: typeof ApiStatusRoute
+  ApiToolsRoute: typeof ApiToolsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tools': {
+      id: '/api/tools'
+      path: '/api/tools'
+      fullPath: '/api/tools'
+      preLoaderRoute: typeof ApiToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/status': {
       id: '/api/status'
       path: '/api/status'
@@ -183,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuccessRoute: SuccessRoute,
   ApiGenerateRoute: ApiGenerateRoute,
   ApiStatusRoute: ApiStatusRoute,
+  ApiToolsRoute: ApiToolsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
