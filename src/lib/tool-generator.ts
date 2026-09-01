@@ -32,13 +32,18 @@ const KEYWORDS: Record<SiteCategory, string[]> = {
 
 export function classify(domain: string): SiteCategory {
   const d = domain.toLowerCase();
+  let best: { cat: SiteCategory; len: number } | null = null;
   for (const [cat, words] of Object.entries(KEYWORDS) as [SiteCategory, string[]][]) {
-    if (words.some((w) => d.includes(w))) return cat;
+    for (const w of words) {
+      if (d.includes(w) && (!best || w.length > best.len)) best = { cat, len: w.length };
+    }
   }
+  if (best) return best.cat;
   if (d.endsWith(".org")) return "nonprofit";
   if (d.endsWith(".io") || d.endsWith(".ai") || d.endsWith(".dev")) return "saas";
   return "generic";
 }
+
 
 interface ToolSeed extends Omit<WebMCPTool, "enabled" | "confidence"> {
   confidence?: number;
