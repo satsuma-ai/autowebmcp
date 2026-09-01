@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, CheckCircle2, Copy, Download, ExternalLink, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Copy, Download, ExternalLink} from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { useProject } from "@/lib/store";
 import { CodeBlock } from "@/components/CodeBlock";
