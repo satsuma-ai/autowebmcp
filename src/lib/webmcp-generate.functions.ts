@@ -10,11 +10,11 @@ const toolSchema = z.object({
   name: z.string(),
   label: z.string(),
   description: z.string(),
-  type: z.enum(["form", "navigation", "search", "transaction", "support", "booking", "account", "content"]),
-  method: z.enum(["GET", "POST"]),
+  type: z.string().optional(),
+  method: z.string().optional(),
   path: z.string(),
-  safety: z.enum(["safe", "confirmation_required", "sensitive"]),
-  examplePrompt: z.string(),
+  safety: z.string().optional(),
+  examplePrompt: z.string().optional(),
   inputSchema: z.object({
     type: z.literal("object").default("object"),
     properties: z.record(
@@ -28,6 +28,29 @@ const toolSchema = z.object({
     required: z.array(z.string()).default([]),
   }),
 });
+
+const TYPES = ["form", "navigation", "search", "transaction", "support", "booking", "account", "content"] as const;
+type ToolType = (typeof TYPES)[number];
+
+function coerceType(v: string | undefined, method: string): ToolType {
+  const t = (v ?? "").toLowerCase();
+  if ((TYPES as readonly string[]).includes(t)) return t as ToolType;
+  if (/search|find|list|query/.test(t)) return "search";
+  if (/book|reserv|appoint/.test(t)) return "booking";
+  if (/order|cart|checkout|pay|commit/.test(t)) return "transaction";
+  if (/support|help|ticket/.test(t)) return "support";
+  if (/account|profile|save/.test(t)) return "account";
+  if (/form|contact|submit/.test(t)) return "form";
+  return method === "POST" ? "form" : "content";
+}
+
+function coerceSafety(v: string | undefined, method: string): "safe" | "confirmation_required" | "sensitive" {
+  const s = (v ?? "").toLowerCase();
+  if (s.includes("sensitive")) return "sensitive";
+  if (s.includes("confirm") || s.includes("destructive")) return "confirmation_required";
+  if (s.includes("safe") || s.includes("read")) return "safe";
+  return method === "POST" ? "confirmation_required" : "safe";
+}
 
 const modelOut = z.object({
   siteName: z.string(),
@@ -149,17 +172,24 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
           apiKey,
         );
         const parsed = modelOut.parse(parseJson(raw));
-        const tools: WebMCPTool[] = parsed.tools.slice(0, 16).map((t, i) => ({
+        const tools: WebMCPTool[] = parsed.tools.slice(0, 16).map((t, i) => {
+          const method = (t.method ?? "").toUpperCase() === "POST" ? "POST" : "GET";
+          return {
           ...t,
+          method,
+          type: coerceType(t.type, method),
+          safety: coerceSafety(t.safety, method),
+          examplePrompt: t.examplePrompt ?? t.label,
           path: t.path.startsWith("/") ? t.path : `/${t.path.replace(/^https?:\/\/[^/]+/, "")}`,
-          confidence: Math.min(0.98, 0.9 - i * 0.005 + (t.method === "GET" ? 0.03 : 0)),
+          confidence: Math.min(0.98, 0.9 - i * 0.005 + (method === "GET" ? 0.03 : 0)),
           enabled: true,
           inputSchema: {
-            type: "object",
+            type: "object" as const,
             properties: t.inputSchema.properties,
             required: t.inputSchema.required,
           },
-        }));
+          };
+        });
         const warnings = [...parsed.warnings];
         if (!evidence?.reachable) warnings.push("Site blocked server-side crawling; tools derived from domain knowledge — verify each endpoint path");
         else if (!evidence.forms.length) warnings.push("No server-rendered forms found; endpoints inferred from navigation and client bundles");
