@@ -1,4 +1,4 @@
-import { Cloud, Globe, Server, Shield, ShieldCheck } from "lucide-react";
+import { Cloud, Globe, Rocket, Server, Shield, ShieldCheck, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface Provider {
