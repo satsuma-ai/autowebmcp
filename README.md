@@ -46,11 +46,6 @@ All endpoints are same-origin JSON:
 TanStack Start (React 19, Vite 7), Tailwind CSS v4, server functions for the analysis and
 generation pipeline, deployed on Cloudflare.
 
-## Repository scope
-
-This repository is the open source shell: the WebMCP module, the edge Worker, the HTTP API surface
-and the UI. Satsuma's proprietary site-analysis and tool-design internals are kept private and are
-excluded via `.gitignore` (see the "Proprietary internals" block there).
 
 ## License
 
