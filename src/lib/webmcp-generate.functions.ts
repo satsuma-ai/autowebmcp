@@ -79,6 +79,7 @@ Quality bar (this is the whole job):
 - names: snake_case verbs. label: short human title. examplePrompt: something a real user would say in the site's own domain language (localized to the site's language when the site is non-English content but keep tool names/schema in English).
 - inputSchema properties: snake_case, typed, with a short description each; mark the real required ones.
 - Evidence may be sparse or empty (large sites block server-side crawlers). In that case rely on your own knowledge of this specific brand, domain, and its real product journeys and URL structure. NEVER fall back to a generic contact/newsletter/site-search set for a site whose business you can recognise from its domain.
+- If evidence.existingAgentTooling shows the site already exposes agent tooling (in-page WebMCP tools, or a remote MCP server such as Shopify's /api/mcp), treat its toolNames as the baseline: keep equivalents, reuse their naming, and design the tools it is MISSING so the set is a strict superset. Say so in summary.
 - Never invent third-party origins, tracking, or auth-token exfiltration. Everything must be same-origin.
 
 Return ONLY minified JSON matching:
@@ -101,6 +102,8 @@ function evidenceBlock(e: Awaited<ReturnType<typeof import("./site-analysis.serv
       apiCandidates: e.apiCandidates,
       searchQueryParams: e.searchParams,
       responseHeaders: e.headers,
+      platform: e.platform,
+      existingAgentTooling: e.existingWebmcp,
       visibleText: e.bodyText.slice(0, 3500),
     },
     null,
@@ -195,6 +198,8 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
           };
         });
         const warnings = [...parsed.warnings];
+        if (evidence?.existingWebmcp.kind === "webmcp")
+          warnings.push("Site already registers in-page WebMCP tools — review overlap before shipping this set");
         if (!evidence?.reachable) warnings.push("Site blocked server-side crawling; tools derived from domain knowledge — verify each endpoint path");
         else if (!evidence.forms.length) warnings.push("No server-rendered forms found; endpoints inferred from navigation and client bundles");
         return {
@@ -215,6 +220,8 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
           },
           tools,
           detectedCdn: detectCdn(domain),
+          platform: evidence?.platform,
+          existingWebmcp: evidence?.existingWebmcp,
           activationStatus: "idle",
           createdAt: Date.now(),
         };
@@ -236,6 +243,8 @@ export const generateWebmcpProject = createServerFn({ method: "POST" })
         warnings: ["Generated from structural heuristics; deep journey analysis unavailable for this site"],
       };
       fallback.category = classify(evidence.domain);
+      fallback.platform = evidence.platform;
+      fallback.existingWebmcp = evidence.existingWebmcp;
     } else {
       fallback.scan.warnings = [
         evidence?.note ?? "Site could not be fetched; tools generated from domain heuristics",

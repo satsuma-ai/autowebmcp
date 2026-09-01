@@ -111,6 +111,36 @@ function ActivatePage() {
           </ul>
         </div>
 
+        {project.existingWebmcp?.present && (
+          <div className="glass mt-4 rounded-2xl border border-success/25 p-5">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-medium text-success">
+                {project.existingWebmcp.kind === "webmcp"
+                  ? "This site already registers WebMCP tools"
+                  : "This site already runs an MCP server"}
+              </span>
+              {project.existingWebmcp.platform && (
+                <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                  {project.existingWebmcp.platform}
+                </span>
+              )}
+            </div>
+            {project.existingWebmcp.note && (
+              <p className="mt-1 text-[13px] text-muted-foreground">{project.existingWebmcp.note}</p>
+            )}
+            {project.existingWebmcp.toolNames.length > 0 && (
+              <p className="mt-2 font-mono text-[11.5px] text-muted-foreground/90">
+                existing: {project.existingWebmcp.toolNames.slice(0, 10).join(", ")}
+              </p>
+            )}
+            {project.existingWebmcp.endpoints.length > 0 && (
+              <p className="mt-1 font-mono text-[11.5px] text-muted-foreground/90">
+                endpoints: {project.existingWebmcp.endpoints.join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Path picker */}
         <div className="mt-10 flex flex-wrap gap-2">
           {(

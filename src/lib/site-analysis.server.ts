@@ -10,6 +10,18 @@ export interface FormEvidence {
   nearbyText: string;
 }
 
+export interface ExistingWebmcp {
+  present: boolean;
+  /** "webmcp" = in-page document.modelContext tools, "mcp-server" = remote MCP endpoint only */
+  kind: "none" | "webmcp" | "mcp-server";
+  platform?: string;
+  signals: string[];
+  endpoints: string[];
+  toolNames: string[];
+  confidence: number;
+  note?: string;
+}
+
 export interface SiteEvidence {
   url: string;
   domain: string;
@@ -26,9 +38,20 @@ export interface SiteEvidence {
   headings: string[];
   bodyText: string;
   headers: Record<string, string>;
+  platform?: string;
+  existingWebmcp: ExistingWebmcp;
   reachable: boolean;
   note?: string;
 }
+
+const NO_WEBMCP: ExistingWebmcp = {
+  present: false,
+  kind: "none",
+  signals: [],
+  endpoints: [],
+  toolNames: [],
+  confidence: 0,
+};
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
@@ -111,6 +134,143 @@ async function get(url: string, timeoutMs = 20000) {
 const INTERESTING =
   /(search|shop|product|catalog|configur|build|konfigurator|menu|order|cart|book|reserv|appointment|contact|kontakt|quote|pricing|preis|demo|signup|login|account|stock|inventory|finance|leasing|lease|test-?drive|probefahrt|dealer|haendler|händler|support|help)/i;
 
+/** Best-effort platform fingerprint from headers + markup. */
+function detectPlatform(html: string, headers: Record<string, string>): { platform?: string; signal?: string } {
+  const h = JSON.stringify(headers).toLowerCase();
+  if (/x-shopid|x-shopify|shopify/.test(h) || /cdn\.shopify\.com|Shopify\.theme|shopify-features/.test(html))
+    return { platform: "Shopify", signal: "Shopify storefront fingerprint (cdn.shopify.com / x-shopify-*)" };
+  if (/woocommerce|wp-content\/plugins\/woocommerce/i.test(html)) return { platform: "WooCommerce", signal: "WooCommerce assets in markup" };
+  if (/bigcommerce/i.test(html) || /bigcommerce/.test(h)) return { platform: "BigCommerce", signal: "BigCommerce fingerprint" };
+  if (/x-magento|Magento_/i.test(html + h)) return { platform: "Magento", signal: "Magento fingerprint" };
+  if (/salesforce commerce|demandware|dwstatic/i.test(html)) return { platform: "Salesforce Commerce Cloud", signal: "Demandware/SFCC asset paths" };
+  if (/squarespace/i.test(html)) return { platform: "Squarespace", signal: "Squarespace fingerprint" };
+  if (/wix(?:static|code)/i.test(html)) return { platform: "Wix", signal: "Wix fingerprint" };
+  if (/webflow/i.test(html)) return { platform: "Webflow", signal: "Webflow fingerprint" };
+  return {};
+}
+
+async function probeJson(url: string): Promise<{ ok: boolean; body: string }> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: "follow",
+      headers: { "user-agent": UA, accept: "application/json,*/*" },
+    });
+    clearTimeout(t);
+    if (!res.ok) return { ok: false, body: "" };
+    const ct = res.headers.get("content-type") ?? "";
+    const body = (await res.text()).slice(0, 4000);
+    if (!/json|text/.test(ct)) return { ok: false, body: "" };
+    return { ok: true, body };
+  } catch {
+    return { ok: false, body: "" };
+  }
+}
+
+async function probeMcpEndpoint(origin: string, path: string): Promise<{ ok: boolean; tools: string[] }> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 9000);
+    const res = await fetch(new URL(path, origin).toString(), {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream", "user-agent": UA },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
+    });
+    clearTimeout(t);
+    if (!res.ok) return { ok: false, tools: [] };
+    const raw = (await res.text()).slice(0, 20000);
+    if (!/jsonrpc|"tools"/.test(raw)) return { ok: false, tools: [] };
+    const tools = uniq(
+      Array.from(raw.matchAll(/"name"\s*:\s*"([a-z0-9_.\-]{2,60})"/gi)).map((m) => m[1]),
+      20,
+    );
+    return { ok: true, tools };
+  } catch {
+    return { ok: false, tools: [] };
+  }
+}
+
+/**
+ * Detects whether a site already exposes agent tooling:
+ * - in-page WebMCP (document.modelContext.registerTool / provideContext)
+ * - a remote MCP server (Shopify storefronts expose /api/mcp)
+ */
+async function detectExistingWebmcp(
+  origin: string,
+  html: string,
+  platform: string | undefined,
+): Promise<ExistingWebmcp> {
+  const signals: string[] = [];
+  const endpoints: string[] = [];
+  let toolNames: string[] = [];
+
+  const inPage = /document\s*\.\s*modelContext|navigator\s*\.\s*modelContext|modelContext\s*\.\s*registerTool|registerTool\s*\(/.test(html);
+  if (/document\s*\.\s*modelContext|navigator\s*\.\s*modelContext/.test(html)) signals.push("document.modelContext referenced in page scripts");
+  if (/registerTool\s*\(/.test(html)) signals.push("registerTool( call found inline");
+  if (/provideContext\s*\(/.test(html)) signals.push("modelContext.provideContext( call found inline");
+  for (const m of html.matchAll(/<script[^>]+src\s*=\s*["']([^"']*(?:webmcp|model-?context|mcp-tools)[^"']*)["']/gi)) {
+    signals.push(`WebMCP script tag: ${m[1]}`);
+    endpoints.push(m[1]);
+  }
+  const inlineNames = uniq(
+    Array.from(html.matchAll(/registerTool\s*\(\s*\{[^}]{0,200}?name\s*:\s*["']([a-z0-9_]{2,50})["']/gi)).map((m) => m[1]),
+    20,
+  );
+  toolNames = inlineNames;
+
+  const wellKnownPaths = ["/.well-known/mcp.json", "/.well-known/webmcp.json", "/.well-known/mcp/manifest.json"];
+  const mcpPaths = platform === "Shopify" ? ["/api/mcp"] : ["/api/mcp", "/mcp"];
+
+  const [wk, mcp] = await Promise.all([
+    Promise.all(wellKnownPaths.map((p) => probeJson(new URL(p, origin).toString()).then((r) => ({ p, ...r })))),
+    Promise.all(mcpPaths.map((p) => probeMcpEndpoint(origin, p).then((r) => ({ p, ...r })))),
+  ]);
+
+  for (const w of wk) {
+    if (w.ok && /mcp|tool/i.test(w.body)) {
+      signals.push(`Manifest served at ${w.p}`);
+      endpoints.push(w.p);
+    }
+  }
+  let serverFound = false;
+  for (const m of mcp) {
+    if (m.ok) {
+      serverFound = true;
+      signals.push(`MCP server responds to tools/list at ${m.p}`);
+      endpoints.push(m.p);
+      if (m.tools.length) toolNames = uniq([...toolNames, ...m.tools], 24);
+    }
+  }
+
+  if (platform === "Shopify" && !serverFound) {
+    signals.push("Shopify storefront — Shopify ships a Storefront MCP endpoint at /api/mcp on most shops (may be disabled here)");
+  }
+
+  const present = inPage || serverFound || signals.some((s) => s.startsWith("Manifest served"));
+  const kind: ExistingWebmcp["kind"] = inPage ? "webmcp" : serverFound || present ? "mcp-server" : "none";
+  const confidence = inPage ? 0.95 : serverFound ? 0.9 : present ? 0.6 : platform === "Shopify" ? 0.4 : 0.05;
+
+  return {
+    present,
+    kind,
+    platform,
+    signals: uniq(signals, 8),
+    endpoints: uniq(endpoints, 6),
+    toolNames,
+    confidence,
+    note: inPage
+      ? "This site already registers in-page WebMCP tools. Auto WebMCP will extend/replace them rather than start from zero."
+      : serverFound
+        ? "A remote MCP server is live, but browser agents still need in-page WebMCP tools — Auto WebMCP can bridge them."
+        : platform === "Shopify"
+          ? "Shopify shops expose a Storefront MCP server, but not in-page WebMCP tools — adding them makes the storefront usable by browser agents."
+          : undefined,
+  };
+}
+
 export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
   const url = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
   const domain = new URL(url).hostname.replace(/^www\./, "");
@@ -130,6 +290,7 @@ export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
     headings: [],
     bodyText: "",
     headers: {},
+    existingWebmcp: NO_WEBMCP,
     reachable: false,
   };
 
@@ -142,10 +303,26 @@ export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
   if (!home.body) return { ...empty, note: `Homepage returned HTTP ${home.res.status}` };
 
   const headers: Record<string, string> = {};
-  for (const k of ["server", "cf-ray", "x-akamai-transformed", "x-vercel-id", "x-nf-request-id", "via", "x-powered-by", "content-language"]) {
+  for (const k of [
+    "server",
+    "cf-ray",
+    "x-akamai-transformed",
+    "x-vercel-id",
+    "x-nf-request-id",
+    "via",
+    "x-powered-by",
+    "content-language",
+    "x-shopid",
+    "x-shopify-stage",
+    "powered-by",
+  ]) {
     const v = home.res.headers.get(k);
     if (v) headers[k] = v;
   }
+
+  const { platform, signal: platformSignal } = detectPlatform(home.body, headers);
+  const existingWebmcp = await detectExistingWebmcp(url, home.body, platform);
+  if (platformSignal) existingWebmcp.signals = uniq([platformSignal, ...existingWebmcp.signals], 8);
 
   const pages: { url: string; html: string }[] = [{ url, html: home.body }];
 
@@ -243,6 +420,8 @@ export async function analyzeSite(rawUrl: string): Promise<SiteEvidence> {
     headings,
     bodyText: text(pages[0].html).slice(0, 6000),
     headers,
+    platform,
+    existingWebmcp,
     reachable: true,
   };
 }
