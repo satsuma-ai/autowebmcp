@@ -18,6 +18,7 @@ import { Route as ApiToolsRouteImport } from './routes/api/tools'
 import { Route as ApiTool_detailsRouteImport } from './routes/api/tool_details'
 import { Route as ApiStatusRouteImport } from './routes/api/status'
 import { Route as ApiGenerateRouteImport } from './routes/api/generate'
+import { Route as ApiAgent_codeRouteImport } from './routes/api/agent_code'
 
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
@@ -64,6 +65,11 @@ const ApiGenerateRoute = ApiGenerateRouteImport.update({
   path: '/api/generate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgent_codeRoute = ApiAgent_codeRouteImport.update({
+  id: '/api/agent_code',
+  path: '/api/agent_code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/generated': typeof GeneratedRoute
   '/scan': typeof ScanRoute
   '/success': typeof SuccessRoute
+  '/api/agent_code': typeof ApiAgent_codeRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/status': typeof ApiStatusRoute
   '/api/tool_details': typeof ApiTool_detailsRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/generated': typeof GeneratedRoute
   '/scan': typeof ScanRoute
   '/success': typeof SuccessRoute
+  '/api/agent_code': typeof ApiAgent_codeRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/status': typeof ApiStatusRoute
   '/api/tool_details': typeof ApiTool_detailsRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/generated': typeof GeneratedRoute
   '/scan': typeof ScanRoute
   '/success': typeof SuccessRoute
+  '/api/agent_code': typeof ApiAgent_codeRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/status': typeof ApiStatusRoute
   '/api/tool_details': typeof ApiTool_detailsRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/generated'
     | '/scan'
     | '/success'
+    | '/api/agent_code'
     | '/api/generate'
     | '/api/status'
     | '/api/tool_details'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/generated'
     | '/scan'
     | '/success'
+    | '/api/agent_code'
     | '/api/generate'
     | '/api/status'
     | '/api/tool_details'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/generated'
     | '/scan'
     | '/success'
+    | '/api/agent_code'
     | '/api/generate'
     | '/api/status'
     | '/api/tool_details'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   GeneratedRoute: typeof GeneratedRoute
   ScanRoute: typeof ScanRoute
   SuccessRoute: typeof SuccessRoute
+  ApiAgent_codeRoute: typeof ApiAgent_codeRoute
   ApiGenerateRoute: typeof ApiGenerateRoute
   ApiStatusRoute: typeof ApiStatusRoute
   ApiTool_detailsRoute: typeof ApiTool_detailsRoute
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agent_code': {
+      id: '/api/agent_code'
+      path: '/api/agent_code'
+      fullPath: '/api/agent_code'
+      preLoaderRoute: typeof ApiAgent_codeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   GeneratedRoute: GeneratedRoute,
   ScanRoute: ScanRoute,
   SuccessRoute: SuccessRoute,
+  ApiAgent_codeRoute: ApiAgent_codeRoute,
   ApiGenerateRoute: ApiGenerateRoute,
   ApiStatusRoute: ApiStatusRoute,
   ApiTool_detailsRoute: ApiTool_detailsRoute,
