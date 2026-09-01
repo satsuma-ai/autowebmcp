@@ -3,6 +3,7 @@ import { ArrowRight, Boxes, Cloud, Code2, Globe, Rocket, Sparkles, Terminal, Zap
 import { useState } from "react";
 import { Nav } from "@/components/Nav";
 import { CodeBlock } from "@/components/CodeBlock";
+import { LiveScans } from "@/components/LiveScans";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -117,6 +118,9 @@ function Landing() {
           </div>
         </div>
       </section>
+
+      {/* LIVE SCAN FEED */}
+      <LiveScans />
 
       {/* TRUST STRIP */}
       <section className="border-y border-border/60 bg-card/20 py-10">
